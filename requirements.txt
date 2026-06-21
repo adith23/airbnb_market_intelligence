@@ -1,0 +1,17 @@
+# Core data processing
+polars>=1.0.0
+duckdb>=1.0.0
+
+# Configuration
+pyyaml>=6.0
+
+# HTTP downloads
+requests>=2.31.0
+tqdm>=4.66.0
+
+# CLI
+click>=8.1.0
+
+# Geospatial (optional, for neighbourhoods.geojson)
+# geopandas>=0.14.0
+# shapely>=2.0.0

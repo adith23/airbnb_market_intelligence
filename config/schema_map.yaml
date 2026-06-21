@@ -1,0 +1,227 @@
+# Canonical schema mapping for multi-city harmonization.
+#
+# Maps raw column names (which may vary across scrape vintages or cities)
+# to a standardized canonical schema. Used by the harmonizer module.
+#
+# Structure:
+#   file_type:
+#     canonical_name:
+#       aliases: [list of raw column name variants]
+#       dtype: target data type for casting
+#       transform: optional transformation to apply
+
+listings:
+  listing_id:
+    aliases: ["id"]
+    dtype: "Int64"
+    transform: null
+  listing_url:
+    aliases: ["listing_url"]
+    dtype: "Utf8"
+    transform: null
+  name:
+    aliases: ["name"]
+    dtype: "Utf8"
+    transform: null
+  description:
+    aliases: ["description"]
+    dtype: "Utf8"
+    transform: "strip_html"
+  host_id:
+    aliases: ["host_id"]
+    dtype: "Int64"
+    transform: null
+  host_name:
+    aliases: ["host_name"]
+    dtype: "Utf8"
+    transform: null
+  host_since:
+    aliases: ["host_since"]
+    dtype: "Date"
+    transform: null
+  host_response_time:
+    aliases: ["host_response_time"]
+    dtype: "Utf8"
+    transform: null
+  host_response_rate:
+    aliases: ["host_response_rate"]
+    dtype: "Float64"
+    transform: "parse_rate_pct"
+  host_acceptance_rate:
+    aliases: ["host_acceptance_rate"]
+    dtype: "Float64"
+    transform: "parse_rate_pct"
+  host_is_superhost:
+    aliases: ["host_is_superhost"]
+    dtype: "Boolean"
+    transform: "parse_boolean"
+  host_listings_count:
+    aliases: ["host_listings_count", "host_total_listings_count"]
+    dtype: "Int32"
+    transform: null
+  host_verifications:
+    aliases: ["host_verifications"]
+    dtype: "Utf8"
+    transform: "parse_host_verifications"
+  host_identity_verified:
+    aliases: ["host_identity_verified"]
+    dtype: "Boolean"
+    transform: "parse_boolean"
+  neighbourhood_cleansed:
+    aliases: ["neighbourhood_cleansed", "neighborhood_cleansed"]
+    dtype: "Utf8"
+    transform: null
+  neighbourhood_group_cleansed:
+    aliases: ["neighbourhood_group_cleansed", "neighborhood_group_cleansed"]
+    dtype: "Utf8"
+    transform: null
+  latitude:
+    aliases: ["latitude"]
+    dtype: "Float64"
+    transform: null
+  longitude:
+    aliases: ["longitude"]
+    dtype: "Float64"
+    transform: null
+  property_type:
+    aliases: ["property_type"]
+    dtype: "Utf8"
+    transform: null
+  room_type:
+    aliases: ["room_type"]
+    dtype: "Utf8"
+    transform: null
+  accommodates:
+    aliases: ["accommodates"]
+    dtype: "Int32"
+    transform: null
+  bathrooms:
+    aliases: ["bathrooms_text", "bathrooms"]
+    dtype: "Float64"
+    transform: "parse_bathrooms_text"
+  bedrooms:
+    aliases: ["bedrooms"]
+    dtype: "Int32"
+    transform: null
+  beds:
+    aliases: ["beds"]
+    dtype: "Int32"
+    transform: null
+  amenities:
+    aliases: ["amenities"]
+    dtype: "Utf8"
+    transform: "parse_amenities"
+  price_local:
+    aliases: ["price"]
+    dtype: "Float64"
+    transform: "clean_price"
+  minimum_nights:
+    aliases: ["minimum_nights"]
+    dtype: "Int32"
+    transform: null
+  maximum_nights:
+    aliases: ["maximum_nights"]
+    dtype: "Int32"
+    transform: null
+  number_of_reviews:
+    aliases: ["number_of_reviews"]
+    dtype: "Int32"
+    transform: null
+  number_of_reviews_ltm:
+    aliases: ["number_of_reviews_ltm"]
+    dtype: "Int32"
+    transform: null
+  first_review:
+    aliases: ["first_review"]
+    dtype: "Date"
+    transform: null
+  last_review:
+    aliases: ["last_review"]
+    dtype: "Date"
+    transform: null
+  review_scores_rating:
+    aliases: ["review_scores_rating"]
+    dtype: "Float64"
+    transform: null
+  reviews_per_month:
+    aliases: ["reviews_per_month"]
+    dtype: "Float64"
+    transform: null
+  license:
+    aliases: ["license", "licence"]
+    dtype: "Utf8"
+    transform: null
+  instant_bookable:
+    aliases: ["instant_bookable"]
+    dtype: "Boolean"
+    transform: "parse_boolean"
+  availability_365:
+    aliases: ["availability_365"]
+    dtype: "Int32"
+    transform: null
+
+calendar:
+  listing_id:
+    aliases: ["listing_id"]
+    dtype: "Int64"
+    transform: null
+  date:
+    aliases: ["date"]
+    dtype: "Date"
+    transform: null
+  available:
+    aliases: ["available"]
+    dtype: "Boolean"
+    transform: "parse_boolean"
+  price_local:
+    aliases: ["price"]
+    dtype: "Float64"
+    transform: "clean_price"
+  adjusted_price_local:
+    aliases: ["adjusted_price"]
+    dtype: "Float64"
+    transform: "clean_price"
+  minimum_nights:
+    aliases: ["minimum_nights"]
+    dtype: "Int32"
+    transform: null
+  maximum_nights:
+    aliases: ["maximum_nights"]
+    dtype: "Int32"
+    transform: null
+
+reviews:
+  review_id:
+    aliases: ["id"]
+    dtype: "Int64"
+    transform: null
+  listing_id:
+    aliases: ["listing_id"]
+    dtype: "Int64"
+    transform: null
+  date:
+    aliases: ["date"]
+    dtype: "Date"
+    transform: null
+  reviewer_id:
+    aliases: ["reviewer_id"]
+    dtype: "Int64"
+    transform: null
+  reviewer_name:
+    aliases: ["reviewer_name"]
+    dtype: "Utf8"
+    transform: null
+  comments:
+    aliases: ["comments"]
+    dtype: "Utf8"
+    transform: "strip_html"
+
+neighbourhoods:
+  neighbourhood:
+    aliases: ["neighbourhood", "neighborhood"]
+    dtype: "Utf8"
+    transform: null
+  neighbourhood_group:
+    aliases: ["neighbourhood_group", "neighborhood_group"]
+    dtype: "Utf8"
+    transform: null

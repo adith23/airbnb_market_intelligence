@@ -1,0 +1,83 @@
+# Validation rules for Inside Airbnb dataset columns.
+#
+# Each file type contains column-level validation specifications.
+# Rules are applied by the validator module to produce data quality reports.
+#
+# Rule types:
+#   range:     {min, max}           — numeric bounds check
+#   regex:     pattern string       — regex match for string columns
+#   enum:      [list of values]     — allowed value set
+#   unique:    true                 — uniqueness constraint
+#   not_null:  true                 — non-null requirement
+#   positive:  true                 — value > 0
+
+listings:
+  id:
+    not_null: true
+    unique: true
+    positive: true
+  host_id:
+    not_null: true
+    positive: true
+  latitude:
+    not_null: true
+    range: { min: -90.0, max: 90.0 }
+  longitude:
+    not_null: true
+    range: { min: -180.0, max: 180.0 }
+  room_type:
+    not_null: true
+    enum:
+      - "Entire home/apt"
+      - "Private room"
+      - "Shared room"
+      - "Hotel room"
+  accommodates:
+    not_null: true
+    positive: true
+  price:
+    not_null: true
+    regex: "^\\$[0-9,]+\\.[0-9]{2}$"
+  minimum_nights:
+    not_null: true
+    positive: true
+  maximum_nights:
+    not_null: true
+    positive: true
+  number_of_reviews:
+    not_null: true
+    range: { min: 0 }
+  availability_365:
+    range: { min: 0, max: 365 }
+  review_scores_rating:
+    range: { min: 0, max: 100 }    # handles both 0-5 and 0-100 scales
+
+calendar:
+  listing_id:
+    not_null: true
+    positive: true
+  date:
+    not_null: true
+    regex: "^\\d{4}-\\d{2}-\\d{2}$"
+  available:
+    not_null: true
+    enum: ["t", "f"]
+  price:
+    regex: "^\\$[0-9,]+\\.[0-9]{2}$"
+
+reviews:
+  id:
+    not_null: true
+    unique: true
+    positive: true
+  listing_id:
+    not_null: true
+    positive: true
+  date:
+    not_null: true
+    regex: "^\\d{4}-\\d{2}-\\d{2}$"
+
+neighbourhoods:
+  neighbourhood:
+    not_null: true
+    unique: true

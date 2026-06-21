@@ -1,0 +1,185 @@
+# Cleaning rules for Inside Airbnb data standardization.
+#
+# Defines per-file-type cleaning specifications:
+#   - Column groups for type coercion
+#   - Missing value strategies per column
+#   - Text normalization targets
+#
+# Consumed by pipeline/cleaner.py
+
+# =====================================================================
+# Listings cleaning configuration
+# =====================================================================
+listings:
+  # Columns containing price strings ("$1,250.00") → Float64
+  price_columns:
+    - price
+
+  # Columns with Airbnb boolean encoding ("t"/"f") → Boolean
+  boolean_columns:
+    - host_is_superhost
+    - host_has_profile_pic
+    - host_identity_verified
+    - instant_bookable
+    - has_availability
+
+  # Columns with date strings ("YYYY-MM-DD") → Date
+  date_columns:
+    - host_since
+    - first_review
+    - last_review
+    - last_scraped
+
+  # Columns with percentage strings ("95%") → Float64 proportion (0-1)
+  percentage_columns:
+    - host_response_rate
+    - host_acceptance_rate
+
+  # Columns requiring special parsing
+  special_columns:
+    bathrooms_text: parse_bathrooms    # "1.5 baths" → 1.5
+    amenities: parse_amenities         # JSON string → list
+    host_verifications: parse_list     # stringified list → list
+
+  # Text columns to normalize (lowercase, strip, standardize whitespace)
+  text_normalize_columns:
+    - property_type
+    - neighbourhood_cleansed
+    - neighbourhood_group_cleansed
+
+  # Missing value strategies per column
+  # Strategies: reject, explicit_null, sentinel, impute_median_by_group, impute_zero
+  missing_value_strategies:
+    id:                         { strategy: reject }
+    host_id:                    { strategy: reject }
+    price:                      { strategy: reject }
+    latitude:                   { strategy: reject }
+    longitude:                  { strategy: reject }
+    name:                       { strategy: sentinel, fill_value: "Untitled" }
+    host_name:                  { strategy: sentinel, fill_value: "Unknown" }
+    description:                { strategy: explicit_null }
+    neighbourhood_group_cleansed: { strategy: sentinel, fill_value: "Unknown" }
+    bedrooms:
+      strategy: impute_median_by_group
+      group_columns: ["room_type", "accommodates"]
+    beds:
+      strategy: impute_median_by_group
+      group_columns: ["room_type", "accommodates"]
+    bathrooms:
+      strategy: impute_median_by_group
+      group_columns: ["room_type", "accommodates"]
+    review_scores_rating:       { strategy: explicit_null }
+    review_scores_accuracy:     { strategy: explicit_null }
+    review_scores_cleanliness:  { strategy: explicit_null }
+    review_scores_checkin:      { strategy: explicit_null }
+    review_scores_communication: { strategy: explicit_null }
+    review_scores_location:     { strategy: explicit_null }
+    review_scores_value:        { strategy: explicit_null }
+    reviews_per_month:          { strategy: explicit_null }
+    host_response_rate:         { strategy: explicit_null }
+    host_acceptance_rate:       { strategy: explicit_null }
+    host_response_time:         { strategy: explicit_null }
+    license:                    { strategy: explicit_null }
+
+  # Validation rules (applied AFTER cleaning to flag invalid records)
+  validation_rules:
+    price:
+      - { check: not_null }
+      - { check: positive }
+    latitude:
+      - { check: not_null }
+      - { check: range, min: -90.0, max: 90.0 }
+    longitude:
+      - { check: not_null }
+      - { check: range, min: -180.0, max: 180.0 }
+    accommodates:
+      - { check: positive }
+    room_type:
+      - { check: not_null }
+      - { check: enum, values: ["Entire home/apt", "Private room", "Shared room", "Hotel room"] }
+
+# =====================================================================
+# Calendar cleaning configuration
+# =====================================================================
+calendar:
+  price_columns:
+    - price
+    - adjusted_price
+
+  boolean_columns:
+    - available
+
+  date_columns:
+    - date
+
+  percentage_columns: []
+
+  special_columns: {}
+
+  text_normalize_columns: []
+
+  missing_value_strategies:
+    listing_id:     { strategy: reject }
+    date:           { strategy: reject }
+    available:      { strategy: reject }
+    price:          { strategy: explicit_null }
+    adjusted_price: { strategy: explicit_null }
+
+  validation_rules:
+    listing_id:
+      - { check: not_null }
+      - { check: positive }
+    date:
+      - { check: not_null }
+
+# =====================================================================
+# Reviews cleaning configuration
+# =====================================================================
+reviews:
+  price_columns: []
+
+  boolean_columns: []
+
+  date_columns:
+    - date
+
+  percentage_columns: []
+
+  special_columns:
+    comments: strip_html
+
+  text_normalize_columns: []
+
+  missing_value_strategies:
+    id:          { strategy: reject }
+    listing_id:  { strategy: reject }
+    date:        { strategy: reject }
+    comments:    { strategy: explicit_null }
+
+  validation_rules:
+    listing_id:
+      - { check: not_null }
+      - { check: positive }
+    date:
+      - { check: not_null }
+
+# =====================================================================
+# Neighbourhoods cleaning configuration
+# =====================================================================
+neighbourhoods:
+  price_columns: []
+  boolean_columns: []
+  date_columns: []
+  percentage_columns: []
+  special_columns: {}
+
+  text_normalize_columns:
+    - neighbourhood
+    - neighbourhood_group
+
+  missing_value_strategies:
+    neighbourhood: { strategy: reject }
+
+  validation_rules:
+    neighbourhood:
+      - { check: not_null }

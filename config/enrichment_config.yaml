@@ -1,0 +1,88 @@
+# Enrichment configuration for Section 3.3
+#
+# Defines join specifications, derived field formulas,
+# currency conversion rates, and aggregation parameters.
+#
+# Consumed by pipeline/enricher.py
+
+# =====================================================================
+# Calendar aggregation parameters
+# =====================================================================
+calendar_aggregation:
+  # Inside Airbnb reports available=False for BOTH actual bookings
+  # and host-blocked dates. The occupancy rate computed from this
+  # is an UPPER BOUND on true occupancy.
+  occupancy_interpretation: "upper_bound"
+
+  # Revenue estimation uses asking price on booked (unavailable) days.
+  # Actual booking prices are not available in the public dataset.
+  revenue_note: "Estimated from asking price on unavailable days"
+
+# =====================================================================
+# Derived (calculated) fields
+# =====================================================================
+derived_fields:
+  host_tenure_years:
+    description: "Years the host has been on the platform"
+    formula: "(scrape_date - host_since) / 365.25"
+    null_when: "host_since is NULL"
+
+  review_frequency_monthly:
+    description: "Average reviews received per month since first review"
+    formula: "number_of_reviews / months_since_first_review"
+    null_when: "first_review is NULL or number_of_reviews = 0"
+
+  price_per_bedroom:
+    description: "Nightly price divided by bedroom count"
+    formula: "price / bedrooms"
+    null_when: "bedrooms is NULL or 0"
+
+  price_per_person:
+    description: "Nightly price divided by max guest capacity"
+    formula: "price / accommodates"
+    null_when: "accommodates is NULL or 0"
+
+  is_active:
+    description: "Whether the listing appears currently active"
+    formula: "last_review within 12 months of scrape OR availability_365 > 0"
+    type: boolean
+
+  is_professional_host:
+    description: "Host with 3+ listings (commercial operator signal)"
+    formula: "calculated_host_listings_count >= 3"
+    type: boolean
+
+  estimated_monthly_revenue:
+    description: "Projected monthly revenue from occupancy × price"
+    formula: "occupancy_rate_pct / 100 * avg_booked_price * 30"
+    null_when: "occupancy or price data unavailable"
+
+  price_vs_neighbourhood:
+    description: "Listing price relative to neighbourhood median (index)"
+    formula: "price / neighbourhood_median_price"
+    null_when: "neighbourhood_median_price is NULL or 0"
+
+# =====================================================================
+# Currency exchange rates (to USD)
+# =====================================================================
+# Used for cross-city price normalization in build_unified_master().
+# Source: approximate rates — should be updated for production use.
+exchange_rates_to_usd:
+  USD: 1.00
+  EUR: 1.08
+  GBP: 1.27
+
+# =====================================================================
+# Active listing criteria
+# =====================================================================
+active_listing:
+  # A listing is considered "active" if it had a review in the last N months
+  review_recency_months: 12
+  # OR has future availability > 0 days in the next 365
+  min_availability_365: 1
+
+# =====================================================================
+# Professional host threshold
+# =====================================================================
+professional_host:
+  min_listings: 3
