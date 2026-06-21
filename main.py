@@ -605,6 +605,73 @@ def query(query_name: str | None, sql_text: str | None) -> None:
 
 
 # ===================================================================
+# Automated pipeline commands (Section 3.5)
+# ===================================================================
+
+
+def _print_pipeline_result(result) -> None:
+    """Print a compact pipeline execution summary."""
+    status = "SUCCESS" if result.success else "FAILED"
+    click.echo(f"\n{result.city}: {status}")
+    for stage in result.stages:
+        line = f"   {stage.stage}: {stage.status}"
+        if stage.rows_output is not None:
+            line += f" | rows_out={stage.rows_output:,}"
+        if stage.rows_rejected:
+            line += f" | rejected={stage.rows_rejected:,}"
+        if stage.output:
+            line += f" | output={stage.output}"
+        if stage.error:
+            line += f" | error={stage.error}"
+        click.echo(line)
+
+
+@cli.command(name="run-pipeline")
+@click.option("--city", required=True, help="City key from cities.yaml.")
+@click.option("--skip-download", is_flag=True, help="Use existing raw files.")
+@click.option("--force", is_flag=True, help="Reprocess even when metadata says unchanged.")
+def run_pipeline(city: str, skip_download: bool, force: bool) -> None:
+    """Run stages 1-4 for a single city with metadata tracking."""
+    from pipeline.automation import run_city_pipeline
+
+    result = run_city_pipeline(city=city, skip_download=skip_download, force=force)
+    _print_pipeline_result(result)
+    if not result.success:
+        sys.exit(1)
+
+
+@cli.command(name="run-pipeline-all")
+@click.option(
+    "--cities",
+    default="",
+    help="Optional comma-separated city keys. Defaults to all configured cities.",
+)
+@click.option("--skip-download", is_flag=True, help="Use existing raw files.")
+@click.option("--force", is_flag=True, help="Reprocess even when metadata says unchanged.")
+def run_pipeline_all(cities: str, skip_download: bool, force: bool) -> None:
+    """Run stages 1-4 for multiple cities, then unify and model."""
+    from pipeline.automation import run_all_pipelines
+
+    city_list = [city.strip() for city in cities.split(",") if city.strip()] or None
+    results = run_all_pipelines(city_names=city_list, skip_download=skip_download, force=force)
+    for result in results:
+        _print_pipeline_result(result)
+
+    if not all(result.success for result in results):
+        sys.exit(1)
+
+
+@cli.command()
+@click.option("--table", "output_table", help="Output table or artifact name to filter.")
+def lineage(output_table: str | None) -> None:
+    """Show recorded data lineage from the DuckDB metadata store."""
+    from pipeline.metadata import get_lineage
+
+    rows = get_lineage(output_table)
+    click.echo(json.dumps(rows, indent=2, default=str))
+
+
+# ===================================================================
 # Entry point
 # ===================================================================
 

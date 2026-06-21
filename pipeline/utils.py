@@ -481,6 +481,15 @@ def ensure_dirs(*dirs: Path) -> None:
         logger.debug("Ensured directory: %s", d)
 
 
+def get_canonical_city_name(city_name: str) -> str:
+    """Get the canonical city name (city_slug) from config."""
+    try:
+        config = load_city_config(city_name)
+        return config.get("city_slug", city_name)
+    except KeyError:
+        return city_name
+
+
 def get_raw_data_dir(city_name: str) -> Path:
     """Get the raw data directory path for a city.
 
@@ -488,9 +497,9 @@ def get_raw_data_dir(city_name: str) -> Path:
         city_name: City key from cities.yaml.
 
     Returns:
-        Path object: data/raw/{city_name}/
+        Path object: data/raw/{canonical_city_name}/
     """
-    return DATA_DIR / "raw" / city_name
+    return DATA_DIR / "raw" / get_canonical_city_name(city_name)
 
 
 def get_output_dir(subdir: str) -> Path:
@@ -514,9 +523,9 @@ def get_staging_dir(city_name: str) -> Path:
         city_name: City key from cities.yaml.
 
     Returns:
-        Path object: data/staging/{city_name}/
+        Path object: data/staging/{canonical_city_name}/
     """
-    path = DATA_DIR / "staging" / city_name
+    path = DATA_DIR / "staging" / get_canonical_city_name(city_name)
     ensure_dirs(path)
     return path
 
@@ -531,9 +540,9 @@ def get_rejected_dir(city_name: str) -> Path:
         city_name: City key from cities.yaml.
 
     Returns:
-        Path object: data/staging/{city_name}/_rejected/
+        Path object: data/staging/{canonical_city_name}/_rejected/
     """
-    path = DATA_DIR / "staging" / city_name / "_rejected"
+    path = DATA_DIR / "staging" / get_canonical_city_name(city_name) / "_rejected"
     ensure_dirs(path)
     return path
 

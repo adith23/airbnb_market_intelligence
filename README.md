@@ -67,6 +67,9 @@ Raw Data (CSV/GZ) ──→ Profile & QA ──→ Clean (Parquet) ──→ Enr
 | **`unify-master --cities <a,b>`** | **§3.3** | **Build cross-city unified master listings Parquet** |
 | **`model --cities <a,b>`** | **§3.4** | **Build DuckDB star schema dimensions and facts** |
 | **`query --name <query>`** | **§3.4** | **Run named analytical queries against DuckDB** |
+| **`run-pipeline --city <name>`** | **§3.5** | **Run ingest, clean, enrich, and model with metadata tracking** |
+| **`run-pipeline-all`** | **§3.5** | **Run all configured cities, unify masters, and build multi-city model** |
+| **`lineage --table <name>`** | **§3.5** | **Show recorded source-to-output lineage** |
 
 Add `--verbose` / `-v` for debug logging.
 
@@ -89,7 +92,8 @@ Add `--verbose` / `-v` for debug logging.
 │   ├── profiles/             # Statistical profiles
 │   ├── quality/              # Quality + cleaning reports
 │   ├── relationships/        # ERD + integrity reports
-│   └── harmonization/        # Cross-city comparisons
+│   ├── harmonization/        # Cross-city comparisons
+│   └── logs/                 # Pipeline run logs
 ├── pipeline/                 # Core modules
 │   ├── utils.py              # Shared parsing utilities
 │   ├── downloader.py         # Stage 1: dataset acquisition
@@ -98,11 +102,74 @@ Add `--verbose` / `-v` for debug logging.
 │   ├── cleaner.py            # Stage 2: cleaning & standardization
 │   ├── enricher.py           # Stage 3: enrichment & joining
 │   ├── modeler.py            # Stage 4: DuckDB star schema
+│   ├── metadata.py           # Stage 5: run metadata & lineage
+│   ├── automation.py         # Stage 5: orchestration
 │   ├── relationship_mapper.py  # PK/FK analysis
 │   └── harmonizer.py         # Multi-city comparison
 ├── tests/                    # Unit tests
 └── main.py                   # CLI entry point
 ```
+
+## Pipeline Design & Automation
+
+The automated pipeline is driven by `config/cities.yaml`. A new city can be added by defining its city metadata, scrape date, currency, and files, then running:
+
+```bash
+python main.py run-pipeline --city new-city
+```
+
+Section 3.5 automation adds:
+
+| Capability | Implementation |
+|:-----------|:---------------|
+| Stage orchestration | `pipeline/automation.py` composes ingest, clean, enrich, unify, and model stages |
+| Run tracking | `pipeline_runs` table in `data/airbnb.duckdb` |
+| Incremental checks | Source-file MD5 hashes skip unchanged successful stages unless `--force` is used |
+| Lineage | `data_lineage` records output artifacts, source files, and transformation names |
+| Schema history | `schema_history` stores lightweight schema hashes for drift inspection |
+| File logging | Per-run logs are written under `outputs/logs/` |
+
+Useful commands:
+
+```bash
+python main.py run-pipeline --city paris --skip-download
+python main.py run-pipeline-all --skip-download
+python main.py lineage --table duckdb.star_schema
+```
+
+## Engineering Decision Log
+
+| Decision | Choice | Rationale |
+|:---------|:-------|:----------|
+| Processing engine | Polars | Fast columnar transforms for large calendar files with vectorized expressions |
+| Model store | DuckDB | Embedded analytical database with native Parquet reads and no server dependency |
+| Intermediate format | Parquet | Preserves schema/types, compresses well, and supports column pruning |
+| Analytical model | Star schema | BI-friendly dimensional model with predictable joins and clear fact grains |
+| Dimension history | SCD Type 1 | Current assessment uses point-in-time scrape snapshots; Type 2 can be added later |
+| Incremental processing | Hash-based | Simple, deterministic skip logic for monthly Inside Airbnb extracts |
+
+## Module Specifications
+
+| Module | Responsibility |
+|:-------|:---------------|
+| `pipeline/cleaner.py` | Raw CSV/GZ to validated staging Parquet |
+| `pipeline/enricher.py` | Listing-grain master data, joins, aggregations, derived metrics, unified master |
+| `pipeline/modeler.py` | DuckDB dimensions, facts, and analytical query execution |
+| `pipeline/metadata.py` | Run metadata, file hashes, lineage, schema snapshots, file logging |
+| `pipeline/automation.py` | End-to-end stage orchestration with metadata tracking |
+| `main.py` | CLI entry point for individual stages, automation, lineage, and queries |
+
+## Implementation Sequence
+
+The production flow remains dependency ordered:
+
+1. Configure city metadata and enrichment/cleaning rules.
+2. Ingest and profile raw files into the bronze layer.
+3. Clean and validate raw files into staging Parquet.
+4. Enrich listings with calendar, review, neighbourhood, city, and currency context.
+5. Build the DuckDB star schema from enriched and staging Parquet.
+6. Record metadata, lineage, schema snapshots, and logs for auditability.
+7. Run analytical SQL through named or ad-hoc query commands.
 
 ## Running Tests
 
