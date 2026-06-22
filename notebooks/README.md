@@ -34,18 +34,18 @@
 | 04 | `04_host_supply_analysis.ipynb` | §4.4 | Host segmentation, professional vs casual, market concentration |
 | 05 | `05_review_demand_analysis.ipynb` | §4.5 | Review-price-score relationships, sub-score analysis |
 
-### Section 5 — Statistical Analysis
+### Section 5 — Statistical Analysis (in `statistics/` subdirectory)
 
 | # | Notebook | Section | Description |
 |:--|:---------|:--------|:------------|
-| 06 | `06_hypothesis_testing.ipynb` | §5.1-5.2 | 5 formal hypothesis tests + confidence intervals + effect sizes |
-| 07 | `07_correlation_regression.ipynb` | §5.3 | Correlation matrix, OLS regression, VIF, LOWESS |
-| 08 | `08_multi_city_statistics.ipynb` | §5.4 | Cross-city comparisons with multiple testing corrections |
+| 01 | `statistics/01_hypothesis_testing.ipynb` | §5.1-5.2 | 5 formal hypothesis tests + confidence intervals + effect sizes |
+| 02 | `statistics/02_correlation_regression.ipynb` | §5.3 | Correlation matrix, OLS regression, VIF, LOWESS |
+| 03 | `statistics/03_multi_city_statistics.ipynb` | §5.4 | Cross-city comparisons with multiple testing corrections |
 
 ## Shared Modules
 
 - **`helpers.py`** — DuckDB connection, plot styling, business insight formatter
-- **`stats_utils.py`** — Reusable statistical functions (hypothesis tests, effect sizes, CIs)
+- **`statistics/stats_utils.py`** — Reusable statistical functions (hypothesis tests, effect sizes, CIs)
 
 ## Data Sources
 
