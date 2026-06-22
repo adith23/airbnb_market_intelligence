@@ -1,0 +1,247 @@
+# =====================================================================
+# ML Pipeline Configuration — §6.1 Price Prediction + §6.4 Bias Audit
+#
+# Consumed by pipeline/ml/ modules.
+# Mirrors the config-driven pattern of cleaning_rules.yaml and
+# enrichment_config.yaml.
+# =====================================================================
+
+# -----------------------------------------------------------------
+# Target variable
+# -----------------------------------------------------------------
+target:
+  column: price_usd
+  transform: log1p            # log1p(price_usd) for training
+  inverse_transform: expm1    # expm1() to recover original scale
+
+# -----------------------------------------------------------------
+# Train / test split
+# -----------------------------------------------------------------
+split:
+  test_size: 0.20
+  stratify_by:
+    - city
+    - price_quintile           # computed at runtime
+  random_state: 42
+
+# -----------------------------------------------------------------
+# Cross-validation
+# -----------------------------------------------------------------
+cross_validation:
+  n_folds: 5
+  strategy: stratified         # StratifiedKFold on strat_group
+  random_state: 42
+
+# -----------------------------------------------------------------
+# Feature definitions
+# -----------------------------------------------------------------
+features:
+  numeric:
+    - accommodates
+    - bedrooms
+    - beds
+    - bathrooms
+    - amenity_count
+    - number_of_reviews
+    - number_of_reviews_ltm
+    - review_scores_rating
+    - review_scores_accuracy
+    - review_scores_cleanliness
+    - review_scores_checkin
+    - review_scores_communication
+    - review_scores_location
+    - review_scores_value
+    - reviews_per_month
+    - availability_30
+    - availability_60
+    - availability_90
+    - availability_365
+    - minimum_nights
+    - maximum_nights
+    - host_tenure_years
+    - host_listings_count
+    - host_response_rate
+    - latitude
+    - longitude
+    - occupancy_rate_pct
+
+  categorical:
+    - room_type
+    - city
+    - neighbourhood_group
+    - host_response_time
+
+  boolean:
+    - host_is_superhost
+    - instant_bookable
+    - host_identity_verified
+    - is_professional_host
+
+  # Columns to EXCLUDE (target leakage or derived from target)
+  exclude:
+    - price_local
+    - price_usd
+    - price_per_bedroom
+    - price_per_person
+    - price_vs_neighbourhood
+    - estimated_annual_revenue
+    - estimated_monthly_revenue
+    - avg_booked_price
+
+  # Amenity keyword groups → binary flags
+  amenity_flags:
+    has_wifi:             ["wifi", "wi-fi", "internet"]
+    has_kitchen:          ["kitchen"]
+    has_washer:           ["washer", "washing machine"]
+    has_air_conditioning: ["air conditioning", "ac", "a/c"]
+    has_parking:          ["parking", "garage"]
+    has_pool:             ["pool"]
+    has_gym:              ["gym", "fitness"]
+    has_elevator:         ["elevator", "lift"]
+    has_dishwasher:       ["dishwasher"]
+    has_tv:               ["tv", "television"]
+    has_self_checkin:     ["self check-in", "lockbox", "keypad"]
+    has_workspace:        ["workspace", "laptop", "desk"]
+
+  # Interaction terms (feature_a × feature_b)
+  interactions:
+    - [accommodates, bedrooms]
+    - [bedrooms, bathrooms]
+
+  # City centre coordinates for distance features
+  city_centres:
+    paris:          {lat: 48.8566, lon: 2.3522}
+    london:         {lat: 51.5074, lon: -0.1278}
+    new_york_city:  {lat: 40.7128, lon: -74.0060}
+
+  # One-hot encoding cardinality cap (rare categories → __OTHER__)
+  max_cardinality: 20
+
+# -----------------------------------------------------------------
+# Missing value strategies
+# -----------------------------------------------------------------
+missing_values:
+  numeric: median
+  boolean: false
+  categorical: "__MISSING__"
+  add_indicators: true         # create is_missing_X flag columns
+
+# -----------------------------------------------------------------
+# Model families
+# -----------------------------------------------------------------
+models:
+  ridge:
+    enabled: true
+    module: sklearn.linear_model.Ridge
+    hyperparameter_grid:
+      alpha: [0.01, 0.1, 1.0, 10.0, 100.0]
+    tuning: grid_search
+    fixed_params:
+      random_state: 42
+
+  random_forest:
+    enabled: true
+    module: sklearn.ensemble.RandomForestRegressor
+    hyperparameter_grid:
+      n_estimators: [200, 500]
+      max_depth: [10, 20, null]
+      min_samples_leaf: [5, 10, 20]
+    tuning: randomized_search
+    tuning_iterations: 20
+    fixed_params:
+      n_jobs: -1
+      random_state: 42
+
+  xgboost:
+    enabled: true
+    module: xgboost.XGBRegressor
+    hyperparameter_grid:
+      n_estimators: [300, 500, 800]
+      max_depth: [4, 6, 8]
+      learning_rate: [0.01, 0.05, 0.1]
+      subsample: [0.7, 0.8, 0.9]
+      colsample_bytree: [0.7, 0.8]
+    tuning: randomized_search
+    tuning_iterations: 30
+    fixed_params:
+      random_state: 42
+      verbosity: 0
+
+  lightgbm:
+    enabled: true
+    module: lightgbm.LGBMRegressor
+    hyperparameter_grid:
+      n_estimators: [300, 500, 800]
+      max_depth: [4, 6, 8]
+      learning_rate: [0.01, 0.05, 0.1]
+      subsample: [0.7, 0.8, 0.9]
+      colsample_bytree: [0.7, 0.8]
+    tuning: randomized_search
+    tuning_iterations: 30
+    fixed_params:
+      random_state: 42
+      verbosity: -1
+
+# -----------------------------------------------------------------
+# Quantile regression (prediction intervals)
+# -----------------------------------------------------------------
+quantile_regression:
+  enabled: true
+  quantiles: [0.10, 0.90]
+  model: lightgbm              # LightGBM supports native quantile loss
+
+# -----------------------------------------------------------------
+# Evaluation metrics
+# -----------------------------------------------------------------
+evaluation:
+  primary_metric: mae
+  metrics:
+    - mae
+    - rmse
+    - mape
+    - r2
+    - median_ae
+  success_thresholds:
+    mae: 25.0
+    mape: 25.0
+    r2: 0.55
+
+# -----------------------------------------------------------------
+# SHAP explainability
+# -----------------------------------------------------------------
+explainability:
+  shap_sample_size: 5000
+  top_features: 20
+  local_explanations: 5
+  random_state: 42
+
+# -----------------------------------------------------------------
+# Bias audit (§6.4)
+# -----------------------------------------------------------------
+bias_audit:
+  dimensions:
+    - column: city
+      label: Geographic (city-level)
+    - column: neighbourhood_group
+      label: Geographic (neighbourhood)
+    - column: room_type
+      label: Property type
+    - column: is_professional_host
+      label: Host type
+    - column: host_is_superhost
+      label: Superhost status
+    - column: price_quintile
+      label: Price range
+    - column: has_reviews
+      label: New listing cold-start
+
+  significance_alpha: 0.05
+  bootstrap_iterations: 5000
+
+  cross_city_transfer:
+    enabled: true
+    exclude_features_pattern: ["nbhd_", "city_"]
+
+  longo:
+    enabled: true
+    min_group_size: 30

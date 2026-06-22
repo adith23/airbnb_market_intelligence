@@ -550,15 +550,29 @@ def _align_dataframes(dataframes: list[pl.DataFrame]) -> list[pl.DataFrame]:
     schema: dict[str, pl.DataType] = {}
     for df in dataframes:
         for name, dtype in zip(df.columns, df.dtypes):
-            schema.setdefault(name, dtype)
+            if name not in schema:
+                schema[name] = dtype
+            elif schema[name] != dtype:
+                if dtype in (pl.Utf8, pl.String) or schema[name] in (pl.Utf8, pl.String):
+                    schema[name] = pl.String() if hasattr(pl, "String") else pl.Utf8()
+                elif dtype in (pl.Float64, pl.Float32) or schema[name] in (pl.Float64, pl.Float32):
+                    schema[name] = pl.Float64()
+                elif dtype in (pl.Int64, pl.Int32) or schema[name] in (pl.Int64, pl.Int32):
+                    schema[name] = pl.Int64()
 
     ordered_columns = sorted(schema)
     aligned = []
     for df in dataframes:
-        missing = [col for col in ordered_columns if col not in df.columns]
-        if missing:
-            df = df.with_columns([pl.lit(None).cast(schema[col]).alias(col) for col in missing])
-        aligned.append(df.select(ordered_columns))
+        exprs = []
+        for col in ordered_columns:
+            if col not in df.columns:
+                exprs.append(pl.lit(None).cast(schema[col]).alias(col))
+            else:
+                if df.schema[col] != schema[col]:
+                    exprs.append(pl.col(col).cast(schema[col], strict=False).alias(col))
+                else:
+                    exprs.append(pl.col(col))
+        aligned.append(df.select(exprs))
     return aligned
 
 

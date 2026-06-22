@@ -56,6 +56,7 @@ def cli(verbose: bool) -> None:
 @click.option("--city", required=True, help="City key from cities.yaml (e.g., paris).")
 @click.option("--force", is_flag=True, help="Re-download existing files.")
 def download(city: str, force: bool) -> None:
+    city = city.replace("-", "_")
     """Download dataset files for a city from Inside Airbnb."""
     from pipeline.downloader import download_city, verify_downloads
 
@@ -94,6 +95,7 @@ def download(city: str, force: bool) -> None:
 @cli.command()
 @click.option("--city", required=True, help="City key from cities.yaml.")
 def profile(city: str) -> None:
+    city = city.replace("-", "_")
     """Run schema discovery and statistical profiling for a city."""
     from pipeline.profiler import profile_city
 
@@ -117,6 +119,7 @@ def profile(city: str) -> None:
 @cli.command()
 @click.option("--city", required=True, help="City key from cities.yaml.")
 def validate(city: str) -> None:
+    city = city.replace("-", "_")
     """Run data quality validation for a city."""
     from pipeline.validator import generate_quality_report
 
@@ -159,6 +162,7 @@ def validate(city: str) -> None:
 @cli.command(name="map-rels")
 @click.option("--city", required=True, help="City key from cities.yaml.")
 def map_relationships(city: str) -> None:
+    city = city.replace("-", "_")
     """Map PK/FK relationships and validate referential integrity."""
     from pipeline.relationship_mapper import generate_relationship_report
 
@@ -205,6 +209,7 @@ def map_relationships(city: str) -> None:
     help="Comma-separated city keys (e.g., paris,new_york_city).",
 )
 def harmonize(cities: str) -> None:
+    cities = cities.replace("-", "_")
     """Compare schemas across cities and generate harmonization strategy."""
     from pipeline.harmonizer import generate_harmonization_report
 
@@ -238,6 +243,7 @@ def harmonize(cities: str) -> None:
 @click.option("--city", required=True, help="City key from cities.yaml.")
 @click.option("--skip-download", is_flag=True, help="Skip download step.")
 def explore(city: str, skip_download: bool) -> None:
+    city = city.replace("-", "_")
     """Run the full exploration pipeline for a single city.
 
     Steps: download → profile → validate → map-relationships
@@ -353,6 +359,7 @@ def explore_all(skip_download: bool) -> None:
 @cli.command(name="quality-report")
 @click.option("--city", required=True, help="City key from cities.yaml.")
 def quality_report(city: str) -> None:
+    city = city.replace("-", "_")
     """Generate a consolidated data quality report with outlier detection.
 
     Produces a single report covering profiling, completeness analysis,
@@ -408,6 +415,7 @@ def quality_report(city: str) -> None:
     help="File type to clean (default: all).",
 )
 def clean(city: str, file_type: str) -> None:
+    city = city.replace("-", "_")
     """Clean and standardize raw data into typed Parquet files.
 
     Applies price/boolean/date coercion, text normalization,
@@ -472,6 +480,7 @@ def clean(city: str, file_type: str) -> None:
 @click.option("--city", required=True, help="City key from cities.yaml.")
 @click.option("--skip-download", is_flag=True, help="Skip download step.")
 def ingest(city: str, skip_download: bool) -> None:
+    city = city.replace("-", "_")
     """Run the full ingestion pipeline: download → profile → quality report.
 
     This is the Section 3.1 workflow — prepares raw data and produces
@@ -520,6 +529,7 @@ def ingest(city: str, skip_download: bool) -> None:
 @cli.command()
 @click.option("--city", required=True, help="City key from cities.yaml.")
 def enrich(city: str) -> None:
+    city = city.replace("-", "_")
     """Build the enriched master listings dataset for a city."""
     from pipeline.enricher import enrich_city
 
@@ -544,6 +554,7 @@ def enrich(city: str) -> None:
     help="Comma-separated city keys (e.g., paris,new_york_city,london).",
 )
 def unify_master(cities: str) -> None:
+    cities = cities.replace("-", "_")
     """Build the cross-city unified enriched master table."""
     from pipeline.enricher import build_unified_master
 
@@ -566,6 +577,7 @@ def unify_master(cities: str) -> None:
 @click.option("--skip-calendar", is_flag=True, help="Do not build fact_calendar.")
 @click.option("--skip-reviews", is_flag=True, help="Do not build fact_review.")
 def model(cities: str, skip_calendar: bool, skip_reviews: bool) -> None:
+    cities = cities.replace("-", "_")
     """Build the DuckDB star schema from enriched and staging Parquet files."""
     from pipeline.modeler import build_star_schema
 
@@ -629,8 +641,11 @@ def _print_pipeline_result(result) -> None:
 @cli.command(name="run-pipeline")
 @click.option("--city", required=True, help="City key from cities.yaml.")
 @click.option("--skip-download", is_flag=True, help="Use existing raw files.")
-@click.option("--force", is_flag=True, help="Reprocess even when metadata says unchanged.")
+@click.option(
+    "--force", is_flag=True, help="Reprocess even when metadata says unchanged."
+)
 def run_pipeline(city: str, skip_download: bool, force: bool) -> None:
+    city = city.replace("-", "_")
     """Run stages 1-4 for a single city with metadata tracking."""
     from pipeline.automation import run_city_pipeline
 
@@ -647,13 +662,18 @@ def run_pipeline(city: str, skip_download: bool, force: bool) -> None:
     help="Optional comma-separated city keys. Defaults to all configured cities.",
 )
 @click.option("--skip-download", is_flag=True, help="Use existing raw files.")
-@click.option("--force", is_flag=True, help="Reprocess even when metadata says unchanged.")
+@click.option(
+    "--force", is_flag=True, help="Reprocess even when metadata says unchanged."
+)
 def run_pipeline_all(cities: str, skip_download: bool, force: bool) -> None:
+    cities = cities.replace("-", "_")
     """Run stages 1-4 for multiple cities, then unify and model."""
     from pipeline.automation import run_all_pipelines
 
     city_list = [city.strip() for city in cities.split(",") if city.strip()] or None
-    results = run_all_pipelines(city_names=city_list, skip_download=skip_download, force=force)
+    results = run_all_pipelines(
+        city_names=city_list, skip_download=skip_download, force=force
+    )
     for result in results:
         _print_pipeline_result(result)
 
@@ -662,13 +682,200 @@ def run_pipeline_all(cities: str, skip_download: bool, force: bool) -> None:
 
 
 @cli.command()
-@click.option("--table", "output_table", help="Output table or artifact name to filter.")
+@click.option(
+    "--table", "output_table", help="Output table or artifact name to filter."
+)
 def lineage(output_table: str | None) -> None:
     """Show recorded data lineage from the DuckDB metadata store."""
     from pipeline.metadata import get_lineage
 
     rows = get_lineage(output_table)
     click.echo(json.dumps(rows, indent=2, default=str))
+
+
+# ===================================================================
+# ML Pipeline commands (Section 6)
+# ===================================================================
+
+
+@cli.command()
+@click.option(
+    "--config", default="config/ml_config.yaml", help="Path to ml_config.yaml."
+)
+@click.option("--force", is_flag=True, help="Retrain models even if they exist.")
+def train(config: str, force: bool) -> None:
+    """§6.1: Train price prediction models with cross-validation."""
+    from pipeline.ml.feature_store import (
+        build_feature_matrix,
+        load_ml_config,
+        prepare_train_test_split,
+    )
+    from pipeline.ml.trainer import train_experiment
+    from pipeline.utils import get_db_path
+
+    click.echo("🚀 Running ML Training Pipeline...")
+    cfg = load_ml_config(config)
+    feature_set = build_feature_matrix(cfg, get_db_path())
+    split = prepare_train_test_split(feature_set, cfg)
+    result = train_experiment(feature_set, split, cfg)
+
+    click.echo(f"\n✅ Training complete! Experiment ID: {result.experiment_id}")
+    click.echo(
+        f"🏆 Best model: {result.best_model_name} ({result.primary_metric}={result.best_metric_value:.4f})"
+    )
+    click.echo(f"📁 Output saved to: data/models/{result.experiment_id}/")
+
+
+@cli.command()
+@click.option("--experiment-id", required=True, help="Experiment ID to evaluate.")
+@click.option(
+    "--config", default="config/ml_config.yaml", help="Path to ml_config.yaml."
+)
+def evaluate(experiment_id: str, config: str) -> None:
+    """§6.1: Evaluate models on the held-out test set."""
+    from pipeline.ml.evaluator import evaluate_experiment
+    from pipeline.ml.feature_store import (
+        build_feature_matrix,
+        load_ml_config,
+        prepare_train_test_split,
+    )
+    from pipeline.ml.trainer import ExperimentResult, load_experiment
+    from pipeline.utils import get_db_path
+
+    click.echo(f"📊 Evaluating experiment {experiment_id}...")
+    cfg = load_ml_config(config)
+
+    # We need the test set
+    feature_set = build_feature_matrix(cfg, get_db_path())
+    split = prepare_train_test_split(feature_set, cfg)
+
+    # Mock an ExperimentResult from saved data to pass into evaluate_experiment
+    # evaluate_experiment only needs experiment_id, models dict, and best_model_name
+    models, _, exp_dir = load_experiment(experiment_id)
+
+    # Read metrics.json to find the best model
+    import json
+
+    with open(exp_dir / "metrics.json", "r") as fh:
+        metrics = json.load(fh)
+        best_name = metrics["_best_model"]
+
+    class MockExperiment:
+        def __init__(self, e_id, mods, best):
+            self.experiment_id = e_id
+            self.models = mods
+            self.best_model_name = best
+
+    mock_exp = MockExperiment(experiment_id, models, best_name)
+    report = evaluate_experiment(mock_exp, split, cfg)
+
+    click.echo(f"\n✅ Evaluation complete!")
+    click.echo(f"📁 Reports saved to: outputs/ml/{experiment_id}/")
+
+
+@cli.command()
+@click.option("--experiment-id", required=True, help="Experiment ID to explain.")
+@click.option(
+    "--config", default="config/ml_config.yaml", help="Path to ml_config.yaml."
+)
+def explain(experiment_id: str, config: str) -> None:
+    """§6.1: Generate SHAP explainability report."""
+    from pipeline.ml.explainer import explain_model
+    from pipeline.ml.feature_store import (
+        build_feature_matrix,
+        load_ml_config,
+        prepare_train_test_split,
+    )
+    from pipeline.ml.trainer import load_experiment
+    from pipeline.utils import get_db_path
+
+    click.echo(f"🔍 Generating SHAP explanations for {experiment_id}...")
+    cfg = load_ml_config(config)
+    feature_set = build_feature_matrix(cfg, get_db_path())
+    split = prepare_train_test_split(feature_set, cfg)
+
+    models, _, exp_dir = load_experiment(experiment_id)
+    import json
+
+    with open(exp_dir / "metrics.json", "r") as fh:
+        best_name = json.load(fh)["_best_model"]
+
+    class MockExperiment:
+        def __init__(self, e_id, mods, best):
+            self.experiment_id = e_id
+            self.models = mods
+            self.best_model_name = best
+
+    mock_exp = MockExperiment(experiment_id, models, best_name)
+    report = explain_model(mock_exp, split, cfg)
+
+    click.echo(f"\n✅ Explainability analysis complete!")
+    click.echo(f"📁 Reports saved to: outputs/ml/{experiment_id}/")
+
+
+@cli.command(name="bias-audit")
+@click.option("--experiment-id", required=True, help="Experiment ID to audit.")
+@click.option(
+    "--config", default="config/ml_config.yaml", help="Path to ml_config.yaml."
+)
+def bias_audit(experiment_id: str, config: str) -> None:
+    """§6.4: Run model generalization & bias analysis."""
+    from pipeline.ml.bias_auditor import run_bias_audit
+    from pipeline.ml.feature_store import (
+        build_feature_matrix,
+        load_ml_config,
+        prepare_train_test_split,
+    )
+    from pipeline.ml.trainer import load_experiment
+    from pipeline.utils import get_db_path
+
+    click.echo(f"⚖️ Running bias audit for {experiment_id}...")
+    cfg = load_ml_config(config)
+    feature_set = build_feature_matrix(cfg, get_db_path())
+    split = prepare_train_test_split(feature_set, cfg)
+
+    models, _, exp_dir = load_experiment(experiment_id)
+    import json
+
+    with open(exp_dir / "metrics.json", "r") as fh:
+        best_name = json.load(fh)["_best_model"]
+
+    class MockExperiment:
+        def __init__(self, e_id, mods, best):
+            self.experiment_id = e_id
+            self.models = mods
+            self.best_model_name = best
+
+    mock_exp = MockExperiment(experiment_id, models, best_name)
+    report = run_bias_audit(mock_exp, feature_set, split, cfg)
+
+    click.echo(f"\n✅ Bias audit complete!")
+    click.echo(f"⚠️ Overall fairness risk: {report.fairness_summary.overall_risk}")
+    click.echo(f"📁 Reports saved to: outputs/ml/{experiment_id}/")
+
+
+@cli.command(name="run-ml")
+@click.option(
+    "--config", default="config/ml_config.yaml", help="Path to ml_config.yaml."
+)
+@click.option("--force", is_flag=True, help="Retrain models even if they exist.")
+def run_ml(config: str, force: bool) -> None:
+    """Run the complete ML pipeline: train → evaluate → explain → bias-audit."""
+    from pipeline.ml.orchestrator import run_ml_pipeline
+
+    result = run_ml_pipeline(config, force)
+    if result.success:
+        click.echo(f"\n✅ ML Pipeline completed successfully!")
+        click.echo(f"   Experiment ID: {result.experiment_id}")
+        click.echo(f"   Best Model: {result.best_model}")
+        click.echo(f"   Test MAE: ${result.mae:.2f}")
+        click.echo(f"   Bias Risk: {result.bias_risk}")
+        click.echo(f"\n📁 Check outputs/ml/{result.experiment_id}/ for full reports.")
+    else:
+        click.echo(f"\n❌ ML Pipeline failed: {result.error}", err=True)
+        import sys
+
+        sys.exit(1)
 
 
 # ===================================================================

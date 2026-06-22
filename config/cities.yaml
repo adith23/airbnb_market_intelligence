@@ -50,15 +50,15 @@ cities:
         - neighbourhoods.csv
         - neighbourhoods.geojson
 
-  london:
-    display_name: "London"
-    country: united-kingdom
-    state: england
-    city_slug: london
-    currency_code: GBP
-    currency_symbol: "£"
-    timezone: "Europe/London"
-    scrape_date: "2025-09-14"
+  barcelona:
+    display_name: "Barcelona"
+    country: spain
+    state: catalonia
+    city_slug: barcelona
+    currency_code: EUR
+    currency_symbol: "€"
+    timezone: "Europe/Barcelona"
+    scrape_date: "2026-03-21"
     admin_unit_name: "Borough"
     files:
       detailed:
