@@ -1,0 +1,26 @@
+# Notebook dependencies for EDA (§4) and Statistical Analysis (§5)
+#
+# Install alongside the main project requirements:
+#   pip install -r notebooks/requirements-notebooks.txt
+
+# Visualization
+matplotlib>=3.8.0
+seaborn>=0.13.0
+plotly>=5.18.0
+
+# Geographic
+folium>=0.15.0
+branca>=0.7.0
+
+# Statistical analysis (§5)
+scipy>=1.12.0
+statsmodels>=0.14.0
+scikit-learn>=1.4.0
+
+# Notebook utilities
+ipywidgets>=8.1.0
+
+# Data (already in main requirements.txt — listed for clarity)
+# polars>=1.0.0
+# duckdb>=1.0.0
+# pyyaml>=6.0

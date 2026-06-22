@@ -143,6 +143,12 @@ CREATE OR REPLACE TABLE fact_listing_snapshot (
     number_of_reviews       INTEGER,
     number_of_reviews_ltm   INTEGER,
     review_scores_rating    DOUBLE,
+    review_scores_accuracy  DOUBLE,
+    review_scores_cleanliness DOUBLE,
+    review_scores_checkin   DOUBLE,
+    review_scores_communication DOUBLE,
+    review_scores_location  DOUBLE,
+    review_scores_value     DOUBLE,
     reviews_per_month       DOUBLE,
     -- Availability
     availability_30         INTEGER,
