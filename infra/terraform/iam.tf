@@ -22,6 +22,24 @@ resource "google_project_iam_member" "run_invoker" {
   member  = "serviceAccount:${var.service_account_email}"
 }
 
+resource "google_project_iam_member" "artifact_registry_writer" {
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:${var.service_account_email}"
+}
+
+resource "google_project_iam_member" "run_admin" {
+  project = var.project_id
+  role    = "roles/run.admin"
+  member  = "serviceAccount:${var.service_account_email}"
+}
+
+resource "google_project_iam_member" "service_account_user" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${var.service_account_email}"
+}
+
 # =========================================================
 # Workload Identity Federation for GitHub Actions
 # =========================================================
