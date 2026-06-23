@@ -15,6 +15,13 @@ resource "google_cloud_run_v2_job" "data_pipeline" {
         image = "us-docker.pkg.dev/cloudrun/container/hello" # Replaced by CI/CD
         command = ["python", "main.py", "run-pipeline-all"]
         
+        resources {
+          limits = {
+            memory = "8Gi"
+            cpu    = "2"
+          }
+        }
+        
         env {
           name  = "ENV"
           value = var.environment
@@ -71,6 +78,13 @@ resource "google_cloud_run_v2_job" "ml_pipeline" {
         
         # Executes the full ML Orchestrator script
         command = ["python", "-c", "from src.platform.mlops.orchestrator import run_ml_pipeline; run_ml_pipeline('config/ml_config.yaml')"]
+        
+        resources {
+          limits = {
+            memory = "8Gi"
+            cpu    = "2"
+          }
+        }
         
         env {
           name  = "ENV"
