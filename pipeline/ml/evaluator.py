@@ -64,7 +64,7 @@ class ResidualDiagnostics:
     std_residual: float
     skewness: float
     kurtosis: float
-    normality_p: float          # Jarque-Bera p-value
+    normality_p: float  # Jarque-Bera p-value
     heteroscedasticity_p: float  # Breusch-Pagan proxy
 
 
@@ -77,7 +77,7 @@ class StratifiedError:
     n: int
     mae: float
     mape: float
-    mean_residual: float        # Positive = under-predicted, Negative = over-predicted
+    mean_residual: float  # Positive = under-predicted, Negative = over-predicted
     median_residual: float
 
 
@@ -270,19 +270,24 @@ def stratified_error_analysis(
             # MAPE
             nonzero = g_true > 1.0
             if nonzero.sum() > 0:
-                mape = float(np.mean(np.abs(g_true[nonzero] - g_pred[nonzero]) / g_true[nonzero]) * 100)
+                mape = float(
+                    np.mean(np.abs(g_true[nonzero] - g_pred[nonzero]) / g_true[nonzero])
+                    * 100
+                )
             else:
                 mape = np.nan
 
-            results.append(StratifiedError(
-                dimension=dim,
-                group=str(group_val),
-                n=n,
-                mae=float(np.mean(np.abs(g_true - g_pred))),
-                mape=mape,
-                mean_residual=float(np.mean(g_resid)),
-                median_residual=float(np.median(g_resid)),
-            ))
+            results.append(
+                StratifiedError(
+                    dimension=dim,
+                    group=str(group_val),
+                    n=n,
+                    mae=float(np.mean(np.abs(g_true - g_pred))),
+                    mape=mape,
+                    mean_residual=float(np.mean(g_resid)),
+                    median_residual=float(np.median(g_resid)),
+                )
+            )
 
     return results
 
@@ -452,9 +457,7 @@ def save_evaluation_report(report: EvaluationReport) -> Path:
         "experiment_id": report.experiment_id,
         "best_model": report.best_model_name,
         "success_thresholds_met": report.success_check,
-        "test_metrics": {
-            name: m.to_dict() for name, m in report.test_metrics.items()
-        },
+        "test_metrics": {name: m.to_dict() for name, m in report.test_metrics.items()},
         "residual_diagnostics": {
             name: {
                 "mean_residual": round(d.mean_residual, 4),
@@ -486,15 +489,23 @@ def save_evaluation_report(report: EvaluationReport) -> Path:
 
     # Stratified errors as Parquet for downstream analysis
     if report.stratified_errors:
-        strat_df = pd.DataFrame([
-            {
-                "dimension": e.dimension, "group": e.group, "n": e.n,
-                "mae": e.mae, "mape": e.mape,
-                "mean_residual": e.mean_residual, "median_residual": e.median_residual,
-            }
-            for e in report.stratified_errors
-        ])
-        strat_df.to_parquet(output_dir / "stratified_errors.parquet", index=False)
+        import polars as pl
+
+        strat_pl = pl.DataFrame(
+            [
+                {
+                    "dimension": e.dimension,
+                    "group": e.group,
+                    "n": e.n,
+                    "mae": e.mae,
+                    "mape": e.mape,
+                    "mean_residual": e.mean_residual,
+                    "median_residual": e.median_residual,
+                }
+                for e in report.stratified_errors
+            ]
+        )
+        strat_pl.write_parquet(output_dir / "stratified_errors.parquet")
 
     # Markdown report
     _generate_markdown_report(report, output_dir)
@@ -538,12 +549,19 @@ def _generate_markdown_report(report: EvaluationReport, output_dir: Path) -> Non
     # Stratified errors summary
     if report.stratified_errors:
         lines.extend(["## Stratified Error Analysis\n", ""])
-        strat_df = pd.DataFrame([
-            {"Dim": e.dimension, "Group": e.group, "N": e.n,
-             "MAE": f"${e.mae:.2f}", "MAPE": f"{e.mape:.1f}%",
-             "Bias": f"${e.mean_residual:.2f}"}
-            for e in report.stratified_errors
-        ])
+        strat_df = pd.DataFrame(
+            [
+                {
+                    "Dim": e.dimension,
+                    "Group": e.group,
+                    "N": e.n,
+                    "MAE": f"${e.mae:.2f}",
+                    "MAPE": f"{e.mape:.1f}%",
+                    "Bias": f"${e.mean_residual:.2f}",
+                }
+                for e in report.stratified_errors
+            ]
+        )
         lines.append(strat_df.to_markdown(index=False))
 
     # Prediction intervals
@@ -598,9 +616,7 @@ def evaluate_experiment(
             continue
 
         y_pred = trained.predict(split.X_test)
-        metrics = compute_metrics(
-            split.y_test.values, y_pred, name, log_transformed
-        )
+        metrics = compute_metrics(split.y_test.values, y_pred, name, log_transformed)
         test_metrics[name] = metrics
 
         diag = compute_residual_diagnostics(
@@ -610,7 +626,10 @@ def evaluate_experiment(
 
         logger.info(
             "%s test: MAE=$%.2f, MAPE=%.1f%%, R²=%.4f",
-            name, metrics.mae, metrics.mape, metrics.r2,
+            name,
+            metrics.mae,
+            metrics.mape,
+            metrics.r2,
         )
 
     # Stratified error analysis for the best model
@@ -618,13 +637,18 @@ def evaluate_experiment(
     best_model = experiment_result.models[best_name]
     y_pred_best = best_model.predict(split.X_test)
 
-    strat_dims = [d["column"] for d in config.get("bias_audit", {}).get("dimensions", [])]
+    strat_dims = [
+        d["column"] for d in config.get("bias_audit", {}).get("dimensions", [])
+    ]
     if not strat_dims:
         strat_dims = ["city", "room_type", "neighbourhood_group", "price_quintile"]
 
     stratified = stratified_error_analysis(
-        split.y_test.values, y_pred_best, split.meta_test,
-        strat_dims, log_transformed,
+        split.y_test.values,
+        y_pred_best,
+        split.meta_test,
+        strat_dims,
+        log_transformed,
     )
 
     # Prediction intervals
@@ -634,9 +658,12 @@ def evaluate_experiment(
 
     report = generate_evaluation_report(
         experiment_result.experiment_id,
-        test_metrics, best_name,
-        stratified, residual_diag,
-        config, pi_result,
+        test_metrics,
+        best_name,
+        stratified,
+        residual_diag,
+        config,
+        pi_result,
     )
 
     save_evaluation_report(report)

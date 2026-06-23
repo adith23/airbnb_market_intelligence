@@ -260,30 +260,28 @@ def _tune_hyperparameters(
 
     try:
         bins = pd.qcut(y, q=5, labels=False, duplicates="drop")
-        cv = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_state)
+        skf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=random_state)
+        cv = list(skf.split(X, bins))
     except ValueError:
-        cv = KFold(n_splits=n_folds, shuffle=True, random_state=random_state)
-        bins = None
+        kf = KFold(n_splits=n_folds, shuffle=True, random_state=random_state)
+        cv = list(kf.split(X))
 
     scoring = "neg_mean_absolute_error"
 
     if tuning == "grid_search":
         search = GridSearchCV(
             base_model, param_grid, cv=cv, scoring=scoring,
-            n_jobs=-1, refit=True, error_score="raise",
+            n_jobs=1, refit=True, error_score="raise",
         )
     else:
         n_iter = model_config.get("tuning_iterations", 20)
         search = RandomizedSearchCV(
             base_model, param_grid, n_iter=n_iter, cv=cv,
-            scoring=scoring, n_jobs=-1, random_state=random_state,
+            scoring=scoring, n_jobs=1, random_state=random_state,
             refit=True, error_score="raise",
         )
 
-    if bins is not None:
-        search.fit(X, y, groups=None)
-    else:
-        search.fit(X, y)
+    search.fit(X, y)
 
     logger.info(
         "%s best params: %s (CV score: %.4f)",
@@ -389,7 +387,7 @@ def train_quantile_models(
                 colsample_bytree=0.8,
                 random_state=42,
                 verbosity=-1,
-                n_jobs=-1,
+                n_jobs=1,
             )
             model.fit(X_train, y_train)
             elapsed = time.time() - start

@@ -566,3 +566,24 @@ def get_db_path() -> Path:
     """
     ensure_dirs(DATA_DIR)
     return DATA_DIR / "airbnb.duckdb"
+
+
+def filter_raw_files(raw_dir: Path) -> list[Path]:
+    """Discover data files and deduplicate .csv vs .csv.gz.
+    
+    If both exist, prefer the .csv.gz file to avoid processing the
+    same dataset twice which can cause memory pressure.
+    """
+    if not raw_dir.exists():
+        return []
+        
+    files = {}
+    all_files = sorted(list(raw_dir.glob("*.csv")) + list(raw_dir.glob("*.csv.gz")))
+    for p in all_files:
+        base_name = p.name.replace(".csv.gz", "").replace(".csv", "")
+        if base_name not in files:
+            files[base_name] = p
+        elif p.name.endswith(".csv.gz") and files[base_name].name.endswith(".csv"):
+            files[base_name] = p
+            
+    return sorted(list(files.values()))

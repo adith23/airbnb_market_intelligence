@@ -31,6 +31,7 @@ from pipeline.utils import (
     get_output_dir,
     get_raw_data_dir,
     infer_file_type,
+    filter_raw_files,
 )
 
 logger = logging.getLogger(__name__)
@@ -334,9 +335,7 @@ def profile_city(city_name: str) -> dict[str, dict[str, Any]]:
         )
 
     # Discover data files
-    data_files = sorted(
-        list(raw_dir.glob("*.csv")) + list(raw_dir.glob("*.csv.gz"))
-    )
+    data_files = filter_raw_files(raw_dir)
 
     if not data_files:
         logger.warning("No CSV files found in %s", raw_dir)
@@ -631,9 +630,7 @@ def generate_data_quality_report(city_name: str) -> dict[str, Any]:
 
     logger.info("Generating consolidated quality report for: %s", city_name)
 
-    data_files = sorted(
-        list(raw_dir.glob("*.csv")) + list(raw_dir.glob("*.csv.gz"))
-    )
+    data_files = filter_raw_files(raw_dir)
 
     file_reports: dict[str, dict[str, Any]] = {}
     total_rows = 0

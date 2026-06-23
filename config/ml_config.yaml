@@ -11,8 +11,8 @@
 # -----------------------------------------------------------------
 target:
   column: price_usd
-  transform: log1p            # log1p(price_usd) for training
-  inverse_transform: expm1    # expm1() to recover original scale
+  transform: log1p # log1p(price_usd) for training
+  inverse_transform: expm1 # expm1() to recover original scale
 
 # -----------------------------------------------------------------
 # Train / test split
@@ -21,7 +21,7 @@ split:
   test_size: 0.20
   stratify_by:
     - city
-    - price_quintile           # computed at runtime
+    - price_quintile # computed at runtime
   random_state: 42
 
 # -----------------------------------------------------------------
@@ -29,7 +29,7 @@ split:
 # -----------------------------------------------------------------
 cross_validation:
   n_folds: 5
-  strategy: stratified         # StratifiedKFold on strat_group
+  strategy: stratified # StratifiedKFold on strat_group
   random_state: 42
 
 # -----------------------------------------------------------------
@@ -90,18 +90,18 @@ features:
 
   # Amenity keyword groups → binary flags
   amenity_flags:
-    has_wifi:             ["wifi", "wi-fi", "internet"]
-    has_kitchen:          ["kitchen"]
-    has_washer:           ["washer", "washing machine"]
+    has_wifi: ["wifi", "wi-fi", "internet"]
+    has_kitchen: ["kitchen"]
+    has_washer: ["washer", "washing machine"]
     has_air_conditioning: ["air conditioning", "ac", "a/c"]
-    has_parking:          ["parking", "garage"]
-    has_pool:             ["pool"]
-    has_gym:              ["gym", "fitness"]
-    has_elevator:         ["elevator", "lift"]
-    has_dishwasher:       ["dishwasher"]
-    has_tv:               ["tv", "television"]
-    has_self_checkin:     ["self check-in", "lockbox", "keypad"]
-    has_workspace:        ["workspace", "laptop", "desk"]
+    has_parking: ["parking", "garage"]
+    has_pool: ["pool"]
+    has_gym: ["gym", "fitness"]
+    has_elevator: ["elevator", "lift"]
+    has_dishwasher: ["dishwasher"]
+    has_tv: ["tv", "television"]
+    has_self_checkin: ["self check-in", "lockbox", "keypad"]
+    has_workspace: ["workspace", "laptop", "desk"]
 
   # Interaction terms (feature_a × feature_b)
   interactions:
@@ -110,9 +110,9 @@ features:
 
   # City centre coordinates for distance features
   city_centres:
-    paris:          {lat: 48.8566, lon: 2.3522}
-    london:         {lat: 51.5074, lon: -0.1278}
-    new_york_city:  {lat: 40.7128, lon: -74.0060}
+    paris: { lat: 48.8566, lon: 2.3522 }
+    london: { lat: 51.5074, lon: -0.1278 }
+    new_york_city: { lat: 40.7128, lon: -74.0060 }
 
   # One-hot encoding cardinality cap (rare categories → __OTHER__)
   max_cardinality: 20
@@ -124,7 +124,7 @@ missing_values:
   numeric: median
   boolean: false
   categorical: "__MISSING__"
-  add_indicators: true         # create is_missing_X flag columns
+  add_indicators: true # create is_missing_X flag columns
 
 # -----------------------------------------------------------------
 # Model families
@@ -143,26 +143,26 @@ models:
     enabled: true
     module: sklearn.ensemble.RandomForestRegressor
     hyperparameter_grid:
-      n_estimators: [200, 500]
-      max_depth: [10, 20, null]
-      min_samples_leaf: [5, 10, 20]
+      n_estimators: [50]
+      max_depth: [10]
+      min_samples_leaf: [10]
     tuning: randomized_search
-    tuning_iterations: 20
+    tuning_iterations: 2
     fixed_params:
-      n_jobs: -1
+      n_jobs: 1
       random_state: 42
 
   xgboost:
     enabled: true
     module: xgboost.XGBRegressor
     hyperparameter_grid:
-      n_estimators: [300, 500, 800]
-      max_depth: [4, 6, 8]
-      learning_rate: [0.01, 0.05, 0.1]
-      subsample: [0.7, 0.8, 0.9]
-      colsample_bytree: [0.7, 0.8]
+      n_estimators: [100, 200]
+      max_depth: [4, 6]
+      learning_rate: [0.05, 0.1]
+      subsample: [0.8]
+      colsample_bytree: [0.8]
     tuning: randomized_search
-    tuning_iterations: 30
+    tuning_iterations: 5
     fixed_params:
       random_state: 42
       verbosity: 0
@@ -171,13 +171,13 @@ models:
     enabled: true
     module: lightgbm.LGBMRegressor
     hyperparameter_grid:
-      n_estimators: [300, 500, 800]
-      max_depth: [4, 6, 8]
-      learning_rate: [0.01, 0.05, 0.1]
-      subsample: [0.7, 0.8, 0.9]
-      colsample_bytree: [0.7, 0.8]
+      n_estimators: [100, 200]
+      max_depth: [4, 6]
+      learning_rate: [0.05, 0.1]
+      subsample: [0.8]
+      colsample_bytree: [0.8]
     tuning: randomized_search
-    tuning_iterations: 30
+    tuning_iterations: 5
     fixed_params:
       random_state: 42
       verbosity: -1
@@ -188,7 +188,7 @@ models:
 quantile_regression:
   enabled: true
   quantiles: [0.10, 0.90]
-  model: lightgbm              # LightGBM supports native quantile loss
+  model: lightgbm # LightGBM supports native quantile loss
 
 # -----------------------------------------------------------------
 # Evaluation metrics

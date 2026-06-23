@@ -28,6 +28,7 @@ from pipeline.utils import (
     get_raw_data_dir,
     infer_file_type,
     load_yaml_config,
+    filter_raw_files,
 )
 
 logger = logging.getLogger(__name__)
@@ -457,9 +458,7 @@ def generate_quality_report(city_name: str) -> dict[str, Any]:
 
     logger.info("Generating quality report for: %s", city_name)
 
-    data_files = sorted(
-        list(raw_dir.glob("*.csv")) + list(raw_dir.glob("*.csv.gz"))
-    )
+    data_files = filter_raw_files(raw_dir)
 
     file_reports: dict[str, dict[str, Any]] = {}
 

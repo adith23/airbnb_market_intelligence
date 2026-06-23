@@ -491,13 +491,13 @@ def neighbourhood_feature_ablation(
 
     # With neighbourhood
     model_with = clone(model)
-    scores_with = cross_val_score(model_with, X, y, cv=3, scoring="neg_mean_absolute_error", n_jobs=-1)
+    scores_with = cross_val_score(model_with, X, y, cv=3, scoring="neg_mean_absolute_error", n_jobs=1)
     mae_with = float(-scores_with.mean())
 
     # Without neighbourhood
     X_without = X.drop(columns=nbhd_cols, errors="ignore")
     model_without = clone(model)
-    scores_without = cross_val_score(model_without, X_without, y, cv=3, scoring="neg_mean_absolute_error", n_jobs=-1)
+    scores_without = cross_val_score(model_without, X_without, y, cv=3, scoring="neg_mean_absolute_error", n_jobs=1)
     mae_without = float(-scores_without.mean())
 
     # Convert from log-scale MAE to approximate USD MAE

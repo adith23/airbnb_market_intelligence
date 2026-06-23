@@ -22,7 +22,7 @@ from pipeline.metadata import (
     record_lineage,
     start_run,
 )
-from pipeline.utils import get_enriched_dir, get_raw_data_dir, get_staging_dir, load_city_config
+from pipeline.utils import get_enriched_dir, get_raw_data_dir, get_staging_dir, load_city_config, filter_raw_files
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def _raw_sources(city: str) -> list[Path]:
     raw_dir = get_raw_data_dir(city)
     if not raw_dir.exists():
         return []
-    return sorted([*raw_dir.glob("*.csv"), *raw_dir.glob("*.csv.gz")])
+    return filter_raw_files(raw_dir)
 
 
 def _staging_sources(city: str) -> list[Path]:

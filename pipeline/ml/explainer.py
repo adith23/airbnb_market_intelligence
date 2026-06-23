@@ -487,9 +487,12 @@ def explain_model(
     try:
         output_dir = OUTPUTS_DIR / experiment_result.experiment_id
         output_dir.mkdir(parents=True, exist_ok=True)
-        shap_df = pd.DataFrame(shap_vals, columns=list(X_sample.columns))
         shap_path_file = output_dir / "shap_values.parquet"
-        shap_df.to_parquet(shap_path_file, index=False)
+        import polars as pl
+        shap_pl = pl.DataFrame(
+            {col: shap_vals[:, i] for i, col in enumerate(X_sample.columns)}
+        )
+        shap_pl.write_parquet(shap_path_file)
         shap_path = str(shap_path_file)
     except Exception as exc:
         logger.warning("Could not save SHAP values to Parquet: %s", exc)

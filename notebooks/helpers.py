@@ -62,6 +62,7 @@ CITY_CENTRES: dict[str, tuple[float, float]] = {
     "paris":         (48.8566, 2.3522),    # Notre-Dame
     "new_york_city": (40.7580, -73.9855),  # Times Square
     "london":        (51.5074, -0.1278),   # Trafalgar Square
+    "barcelona":     (41.3874, 2.1686),    # Plaça de Catalunya
 }
 
 # City display names

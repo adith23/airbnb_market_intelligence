@@ -600,7 +600,7 @@ def build_feature_matrix(
     # Step 7: Handle missing values
     mv_config = config.get("missing_values", {})
     all_numeric = numeric_cols + list(amenity_flags_df.columns) + ["distance_to_centre_km"]
-    all_numeric += [c for c in feature_df.columns if c.endswith("_x_")]
+    all_numeric += [c for c in feature_df.columns if "_x_" in c]
 
     feature_df, indicator_cols = handle_missing_values(
         feature_df, mv_config, all_numeric, boolean_cols, categorical_cols
@@ -616,10 +616,12 @@ def build_feature_matrix(
         columns=[c for c in feature_df.columns if c in exclude], errors="ignore"
     )
 
-    # Final: ensure all columns are numeric
+    # Final: ensure all columns are numeric and catch any missed NaNs
     for col in feature_df.columns:
         if feature_df[col].dtype == object:
-            feature_df[col] = pd.to_numeric(feature_df[col], errors="coerce").fillna(0)
+            feature_df[col] = pd.to_numeric(feature_df[col], errors="coerce")
+        if feature_df[col].isna().any():
+            feature_df[col] = feature_df[col].fillna(0)
 
     feature_names = list(feature_df.columns)
 

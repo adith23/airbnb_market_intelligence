@@ -25,6 +25,7 @@ from pipeline.utils import (
     get_output_dir,
     get_raw_data_dir,
     infer_file_type,
+    filter_raw_files,
 )
 
 logger = logging.getLogger(__name__)
@@ -251,9 +252,7 @@ def generate_relationship_report(city_name: str) -> dict[str, Any]:
 
     # Load all data files into a dict keyed by file_type
     dataframes: dict[str, pl.DataFrame] = {}
-    data_files = sorted(
-        list(raw_dir.glob("*.csv")) + list(raw_dir.glob("*.csv.gz"))
-    )
+    data_files = filter_raw_files(raw_dir)
 
     for filepath in data_files:
         file_type = infer_file_type(filepath)

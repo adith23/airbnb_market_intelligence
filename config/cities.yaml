@@ -8,16 +8,16 @@
 #   http://insideairbnb.com/get-the-data before running the downloader.
 
 cities:
-  paris:
-    display_name: "Paris"
-    country: france
-    state: ile-de-france
-    city_slug: paris
+  amsterdam:
+    display_name: "Amsterdam"
+    country: the-netherlands
+    state: north-holland
+    city_slug: amsterdam
     currency_code: EUR
     currency_symbol: "€"
-    timezone: "Europe/Paris"
-    scrape_date: "2025-09-12"
-    admin_unit_name: "Arrondissement"
+    timezone: "Europe/Amsterdam"
+    scrape_date: "2025-09-11"
+    admin_unit_name: "Neighbourhood"
     files:
       detailed:
         - listings.csv.gz
