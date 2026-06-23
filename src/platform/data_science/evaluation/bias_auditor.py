@@ -24,11 +24,11 @@ import numpy as np
 import pandas as pd
 from sklearn.base import clone
 
-from src.platform.common.utils import PROJECT_ROOT
+from src.platform.common.utils import OUTPUT_DIR
 
 logger = logging.getLogger(__name__)
 
-OUTPUTS_DIR = PROJECT_ROOT / "outputs" / "ml"
+OUTPUTS_DIR = OUTPUT_DIR / "ml"
 
 
 # ===================================================================
