@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: us-central1
@@ -20,7 +24,8 @@ jobs:
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
         with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+          workload_identity_provider: 'projects/605975162766/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: '605975162766-compute@developer.gserviceaccount.com'
 
       - name: 'Setup Terraform'
         uses: hashicorp/setup-terraform@v2
@@ -47,7 +52,8 @@ jobs:
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
         with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+          workload_identity_provider: 'projects/605975162766/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: '605975162766-compute@developer.gserviceaccount.com'
           
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v1'
