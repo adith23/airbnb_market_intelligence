@@ -13,6 +13,7 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: us-central1
   DASHBOARD_IMAGE: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/airbnb-app-repo-prod/dashboard:latest
+  PIPELINE_IMAGE: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/airbnb-ml-models-prod/pipeline:latest
 
 jobs:
   build_and_deploy_dashboard:
@@ -36,8 +37,6 @@ jobs:
 
       - name: 'Build and Push Docker Images'
         run: |
-          PIPELINE_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/airbnb-ml-models-prod/pipeline:latest"
-          
           # Build and push Dashboard
           docker build -t $DASHBOARD_IMAGE -f dashboard/Dockerfile .
           docker push $DASHBOARD_IMAGE

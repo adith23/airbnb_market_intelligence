@@ -1,0 +1,35 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Git
+.git/
+.gitignore
+
+# Data and Outputs (Data is mounted via GCS FUSE, not baked in)
+data/
+outputs/
+*.csv
+*.parquet
+*.duckdb
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.backup
+infra/terraform/.terraform.lock.hcl
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ML Models
+*.joblib
