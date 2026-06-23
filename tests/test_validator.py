@@ -3,18 +3,17 @@
 from __future__ import annotations
 
 import polars as pl
-import pytest
 
-from pipeline.validator import (
+from src.platform.data_engineering.ingestion.validator import (
     detect_duplicates,
     detect_scraping_artifacts,
     validate_column,
 )
 
-
 # ===================================================================
 # Column validation
 # ===================================================================
+
 
 class TestValidateColumn:
     def test_not_null_pass(self):
@@ -70,9 +69,7 @@ class TestValidateColumn:
 
     def test_multiple_rules(self):
         series = pl.Series("test", [1, 2, None])
-        result = validate_column(
-            series, "test", {"not_null": True, "positive": True}
-        )
+        result = validate_column(series, "test", {"not_null": True, "positive": True})
         assert result["passed"] is False
         assert len(result["violations"]) >= 1
 
@@ -80,6 +77,7 @@ class TestValidateColumn:
 # ===================================================================
 # Duplicate detection
 # ===================================================================
+
 
 class TestDetectDuplicates:
     def test_no_duplicates(self):
@@ -93,10 +91,12 @@ class TestDetectDuplicates:
         assert result["duplicate_keys"] == 1
 
     def test_composite_key(self):
-        df = pl.DataFrame({
-            "listing_id": [1, 1, 2],
-            "date": ["2024-01-01", "2024-01-02", "2024-01-01"],
-        })
+        df = pl.DataFrame(
+            {
+                "listing_id": [1, 1, 2],
+                "date": ["2024-01-01", "2024-01-02", "2024-01-01"],
+            }
+        )
         result = detect_duplicates(df, ["listing_id", "date"])
         assert result["duplicate_keys"] == 0
 
@@ -109,6 +109,7 @@ class TestDetectDuplicates:
 # ===================================================================
 # Scraping artifact detection
 # ===================================================================
+
 
 class TestDetectScrapingArtifacts:
     def test_no_artifacts(self):

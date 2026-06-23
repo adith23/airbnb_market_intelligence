@@ -9,13 +9,10 @@ Tests each cleaning transformation with:
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import polars as pl
-import pytest
 
-from pipeline.cleaner import (
-    CleaningResult,
+from src.platform.data_engineering.ingestion.cleaner import (
+    _apply_missing_strategies,
     _cast_boolean_columns,
     _clean_percentage_columns,
     _clean_price_columns,
@@ -25,13 +22,12 @@ from pipeline.cleaner import (
     _parse_bathrooms_column,
     _parse_date_columns,
     _strip_html_column,
-    _apply_missing_strategies,
 )
-
 
 # ===================================================================
 # Price cleaning
 # ===================================================================
+
 
 class TestCleanPriceColumns:
     def test_usd_prices(self):
@@ -68,6 +64,7 @@ class TestCleanPriceColumns:
 # Boolean casting
 # ===================================================================
 
+
 class TestCastBooleanColumns:
     def test_standard_values(self):
         df = pl.DataFrame({"flag": ["t", "f", "t"]})
@@ -99,6 +96,7 @@ class TestCastBooleanColumns:
 # Date parsing
 # ===================================================================
 
+
 class TestParseDateColumns:
     def test_valid_dates(self):
         df = pl.DataFrame({"date": ["2024-01-15", "2024-12-31"]})
@@ -122,6 +120,7 @@ class TestParseDateColumns:
 # Percentage cleaning
 # ===================================================================
 
+
 class TestCleanPercentageColumns:
     def test_standard_pct(self):
         df = pl.DataFrame({"rate": ["95%", "100%", "0%"]})
@@ -140,6 +139,7 @@ class TestCleanPercentageColumns:
 # ===================================================================
 # Bathrooms parsing
 # ===================================================================
+
 
 class TestParseBathroomsColumn:
     def test_numeric_baths(self):
@@ -174,6 +174,7 @@ class TestParseBathroomsColumn:
 # Amenity counting
 # ===================================================================
 
+
 class TestCountAmenities:
     def test_json_array(self):
         df = pl.DataFrame({"amenities": ['["Wifi","Kitchen","Pool"]']})
@@ -194,6 +195,7 @@ class TestCountAmenities:
 # ===================================================================
 # HTML stripping
 # ===================================================================
+
 
 class TestStripHtmlColumn:
     def test_basic_html(self):
@@ -216,6 +218,7 @@ class TestStripHtmlColumn:
 # Text normalization
 # ===================================================================
 
+
 class TestNormalizeTextColumns:
     def test_whitespace_stripping(self):
         df = pl.DataFrame({"type": ["  Studio  ", "Apartment"]})
@@ -231,6 +234,7 @@ class TestNormalizeTextColumns:
 # ===================================================================
 # Missing value strategies
 # ===================================================================
+
 
 class TestApplyMissingStrategies:
     def test_sentinel_fill(self):
@@ -262,6 +266,7 @@ class TestApplyMissingStrategies:
 # ===================================================================
 # Validation flags
 # ===================================================================
+
 
 class TestComputeValidationFlags:
     def test_all_valid(self):

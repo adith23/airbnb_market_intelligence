@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import re
 import textwrap
-from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -59,10 +58,10 @@ AIRBNB_DIVERGING = ["#FF5A5F", "#FFB3B5", "#F5F5F5", "#A8DCD8", "#00A699"]
 
 # City centres for distance calculations
 CITY_CENTRES: dict[str, tuple[float, float]] = {
-    "paris":         (48.8566, 2.3522),    # Notre-Dame
+    "paris": (48.8566, 2.3522),  # Notre-Dame
     "new_york_city": (40.7580, -73.9855),  # Times Square
-    "london":        (51.5074, -0.1278),   # Trafalgar Square
-    "barcelona":     (41.3874, 2.1686),    # Plaça de Catalunya
+    "london": (51.5074, -0.1278),  # Trafalgar Square
+    "barcelona": (41.3874, 2.1686),  # Plaça de Catalunya
 }
 
 # City display names
@@ -76,6 +75,7 @@ CITY_DISPLAY: dict[str, str] = {
 # ===================================================================
 # DuckDB Connection Manager
 # ===================================================================
+
 
 class AirbnbDB:
     """Context-manager for read-only access to the Airbnb DuckDB star schema.
@@ -123,9 +123,15 @@ class AirbnbDB:
         """Return row counts for all star-schema tables."""
         con = self._ensure_connection()
         tables = [
-            "dim_date", "dim_city", "dim_host", "dim_property",
-            "dim_neighbourhood", "dim_reviewer",
-            "fact_listing_snapshot", "fact_calendar", "fact_review",
+            "dim_date",
+            "dim_city",
+            "dim_host",
+            "dim_property",
+            "dim_neighbourhood",
+            "dim_reviewer",
+            "fact_listing_snapshot",
+            "fact_calendar",
+            "fact_review",
         ]
         rows = []
         for t in tables:
@@ -140,9 +146,7 @@ class AirbnbDB:
         """Parse -- name: blocks from analytical_queries.sql."""
         sql_path = _SQL_DIR / "analytical_queries.sql"
         text = sql_path.read_text(encoding="utf-8")
-        matches = list(re.finditer(
-            r"^--\s*name:\s*(\w+)\s*$", text, flags=re.MULTILINE
-        ))
+        matches = list(re.finditer(r"^--\s*name:\s*(\w+)\s*$", text, flags=re.MULTILINE))
         queries: dict[str, str] = {}
         for idx, match in enumerate(matches):
             name = match.group(1)
@@ -159,7 +163,7 @@ class AirbnbDB:
             self._con.close()
             self._con = None
 
-    def __enter__(self) -> "AirbnbDB":
+    def __enter__(self) -> AirbnbDB:
         self._ensure_connection()
         return self
 
@@ -173,6 +177,7 @@ class AirbnbDB:
 # ===================================================================
 # Enriched Parquet loader (for columns not in star schema)
 # ===================================================================
+
 
 def load_enriched_master(city: str | None = None) -> pd.DataFrame:
     """Load enriched master listings Parquet as Pandas DataFrame.
@@ -196,8 +201,7 @@ def load_enriched_master(city: str | None = None) -> pd.DataFrame:
 
     if not path.exists():
         raise FileNotFoundError(
-            f"Enriched master not found: {path}\n"
-            f"Run: python main.py enrich --city {city or 'all'}"
+            f"Enriched master not found: {path}\nRun: python main.py enrich --city {city or 'all'}"
         )
 
     return pl.read_parquet(path).to_pandas()
@@ -212,8 +216,7 @@ def load_raw_geojson(city: str) -> dict:
 
     if not geojson_path.exists():
         raise FileNotFoundError(
-            f"GeoJSON not found: {geojson_path}\n"
-            f"Run: python main.py download --city {city}"
+            f"GeoJSON not found: {geojson_path}\nRun: python main.py download --city {city}"
         )
 
     with open(geojson_path, encoding="utf-8") as f:
@@ -223,6 +226,7 @@ def load_raw_geojson(city: str) -> dict:
 # ===================================================================
 # Plot Styling
 # ===================================================================
+
 
 def set_airbnb_style(dark: bool = False) -> None:
     """Configure matplotlib and seaborn with Airbnb-inspired styling.
@@ -235,40 +239,41 @@ def set_airbnb_style(dark: bool = False) -> None:
 
     sns.set_palette(AIRBNB_PALETTE)
 
-    plt.rcParams.update({
-        # Typography
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Inter", "Segoe UI", "Helvetica Neue", "Arial"],
-        "font.size": 11,
-        "axes.titlesize": 14,
-        "axes.titleweight": "bold",
-        "axes.labelsize": 12,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10,
-        "legend.fontsize": 10,
-
-        # Layout
-        "figure.figsize": (12, 6),
-        "figure.dpi": 100,
-        "savefig.dpi": 150,
-        "figure.facecolor": "#1a1a2e" if dark else "white",
-        "axes.facecolor": "#16213e" if dark else "#fafafa",
-        "axes.edgecolor": "#444" if dark else "#cccccc",
-        "axes.grid": True,
-        "grid.alpha": 0.3,
-        "grid.linewidth": 0.5,
-
-        # Colours
-        "text.color": "#e0e0e0" if dark else "#484848",
-        "axes.labelcolor": "#e0e0e0" if dark else "#484848",
-        "xtick.color": "#aaa" if dark else "#767676",
-        "ytick.color": "#aaa" if dark else "#767676",
-    })
+    plt.rcParams.update(
+        {
+            # Typography
+            "font.family": "sans-serif",
+            "font.sans-serif": ["Inter", "Segoe UI", "Helvetica Neue", "Arial"],
+            "font.size": 11,
+            "axes.titlesize": 14,
+            "axes.titleweight": "bold",
+            "axes.labelsize": 12,
+            "xtick.labelsize": 10,
+            "ytick.labelsize": 10,
+            "legend.fontsize": 10,
+            # Layout
+            "figure.figsize": (12, 6),
+            "figure.dpi": 100,
+            "savefig.dpi": 150,
+            "figure.facecolor": "#1a1a2e" if dark else "white",
+            "axes.facecolor": "#16213e" if dark else "#fafafa",
+            "axes.edgecolor": "#444" if dark else "#cccccc",
+            "axes.grid": True,
+            "grid.alpha": 0.3,
+            "grid.linewidth": 0.5,
+            # Colours
+            "text.color": "#e0e0e0" if dark else "#484848",
+            "axes.labelcolor": "#e0e0e0" if dark else "#484848",
+            "xtick.color": "#aaa" if dark else "#767676",
+            "ytick.color": "#aaa" if dark else "#767676",
+        }
+    )
 
 
 # ===================================================================
 # Business Insight Formatter
 # ===================================================================
+
 
 def business_insight(
     title: str,
@@ -306,6 +311,7 @@ def business_insight(
 # Formatting Utilities
 # ===================================================================
 
+
 def fmt_currency(value: float, symbol: str = "$", decimals: int = 0) -> str:
     """Format a number as currency: $1,250."""
     if pd.isna(value):
@@ -333,6 +339,7 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     Accurate enough at city scale (< 0.5% error within 50km).
     """
     import math
+
     dx = (lon2 - lon1) * math.cos(math.radians((lat1 + lat2) / 2)) * 111.32
     dy = (lat2 - lat1) * 111.32
     return math.sqrt(dx * dx + dy * dy)

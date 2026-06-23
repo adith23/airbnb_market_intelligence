@@ -10,20 +10,17 @@ Run:
 
 from __future__ import annotations
 
-import numpy as np
-import pandas as pd
-import pytest
-
 # Ensure the project root is importable
 import sys
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from notebooks.statistics.stats_utils import (
-    AssumptionResult,
-    ConfidenceInterval,
-    HypothesisTestResult,
     analytical_ci,
     apply_correction,
     bootstrap_ci,
@@ -42,7 +39,6 @@ from notebooks.statistics.stats_utils import (
     rank_biserial_correlation,
     two_group_test,
 )
-
 
 # ===================================================================
 # Fixtures
@@ -273,11 +269,13 @@ class TestTwoGroupTest:
     def test_significant_difference(self, two_distinct_groups):
         a, b = two_distinct_groups
         result = two_group_test(
-            a, b,
+            a,
+            b,
             hypothesis_id="H_test",
             null_hypothesis="Medians are equal",
             alt_hypothesis="Medians differ",
-            group_a_label="Low", group_b_label="High",
+            group_a_label="Low",
+            group_b_label="High",
         )
         assert result.is_significant
         assert result.p_value < 0.001
@@ -287,7 +285,8 @@ class TestTwoGroupTest:
     def test_no_significant_difference(self, two_similar_groups):
         a, b = two_similar_groups
         result = two_group_test(
-            a, b,
+            a,
+            b,
             hypothesis_id="H_null",
             null_hypothesis="Medians are equal",
             alt_hypothesis="Medians differ",
@@ -299,7 +298,8 @@ class TestTwoGroupTest:
         a = skewed_data[:250]
         b = skewed_data[250:] + 50
         result = two_group_test(
-            a, b,
+            a,
+            b,
             hypothesis_id="H_skew",
             null_hypothesis="Medians are equal",
             alt_hypothesis="Medians differ",
@@ -309,7 +309,8 @@ class TestTwoGroupTest:
     def test_one_sided(self, two_distinct_groups):
         a, b = two_distinct_groups
         result = two_group_test(
-            b, a,
+            b,
+            a,
             hypothesis_id="H_one",
             null_hypothesis="B ≤ A",
             alt_hypothesis="B > A",
@@ -362,7 +363,8 @@ class TestPairedTest:
         a = rng.normal(100, 10, 200)
         b = a + rng.normal(5, 2, 200)  # systematic shift
         result = paired_test(
-            b, a,
+            b,
+            a,
             hypothesis_id="H_paired",
             null_hypothesis="No difference",
             alt_hypothesis="Difference exists",
@@ -381,11 +383,13 @@ class TestComputeVIF:
 
     def test_independent_features(self):
         rng = np.random.default_rng(42)
-        X = pd.DataFrame({
-            "x1": rng.normal(0, 1, 200),
-            "x2": rng.normal(0, 1, 200),
-            "x3": rng.normal(0, 1, 200),
-        })
+        X = pd.DataFrame(
+            {
+                "x1": rng.normal(0, 1, 200),
+                "x2": rng.normal(0, 1, 200),
+                "x3": rng.normal(0, 1, 200),
+            }
+        )
         vif_df = compute_vif(X)
         assert len(vif_df) == 3
         assert all(vif_df["VIF"] < 5)  # independent → low VIF
@@ -393,11 +397,13 @@ class TestComputeVIF:
     def test_collinear_features(self):
         rng = np.random.default_rng(42)
         x = rng.normal(0, 1, 200)
-        X = pd.DataFrame({
-            "x": x,
-            "x_copy": x + rng.normal(0, 0.01, 200),  # near-perfect copy
-            "independent": rng.normal(0, 1, 200),
-        })
+        X = pd.DataFrame(
+            {
+                "x": x,
+                "x_copy": x + rng.normal(0, 0.01, 200),  # near-perfect copy
+                "independent": rng.normal(0, 1, 200),
+            }
+        )
         vif_df = compute_vif(X)
         # x and x_copy should have very high VIF
         max_vif = vif_df["VIF"].max()
@@ -436,10 +442,7 @@ class TestApplyCorrection:
         result = apply_correction(p_values, method="bonferroni")
         assert len(result) == 4
         # Adjusted p-values should be ≥ raw
-        assert all(
-            result[f"p-value (bonferroni)"].iloc[i] >= p_values[i]
-            for i in range(4)
-        )
+        assert all(result["p-value (bonferroni)"].iloc[i] >= p_values[i] for i in range(4))
 
     def test_holm(self):
         p_values = [0.01, 0.04, 0.03, 0.005]
@@ -471,7 +474,8 @@ class TestFormatTestResult:
     def test_produces_markdown(self, two_distinct_groups):
         a, b = two_distinct_groups
         result = two_group_test(
-            a, b,
+            a,
+            b,
             hypothesis_id="H_fmt",
             null_hypothesis="No difference",
             alt_hypothesis="Difference exists",

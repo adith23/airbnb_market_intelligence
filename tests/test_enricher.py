@@ -6,7 +6,7 @@ from datetime import date
 
 import polars as pl
 
-from pipeline import enricher
+from src.platform.feature_engineering import enricher
 
 
 def _patch_enricher_paths(monkeypatch, tmp_path):
@@ -66,7 +66,12 @@ def test_enrich_city_builds_master_with_calendar_reviews_and_neighbourhoods(monk
     pl.DataFrame(
         {
             "listing_id": [1, 1, 2, 2],
-            "date": [date(2026, 2, 1), date(2026, 2, 2), date(2026, 2, 1), date(2026, 2, 2)],
+            "date": [
+                date(2026, 2, 1),
+                date(2026, 2, 2),
+                date(2026, 2, 1),
+                date(2026, 2, 2),
+            ],
             "available": [False, True, False, False],
             "price": [100.0, 120.0, 200.0, 220.0],
             "minimum_nights": [1, 1, 2, 2],
@@ -94,7 +99,11 @@ def test_enrich_city_builds_master_with_calendar_reviews_and_neighbourhoods(monk
     master = pl.read_parquet(result.output_path).sort("id")
 
     assert result.listings_count == 2
-    assert result.join_coverage == {"calendar": 100.0, "reviews": 100.0, "neighbourhood": 100.0}
+    assert result.join_coverage == {
+        "calendar": 100.0,
+        "reviews": 100.0,
+        "neighbourhood": 100.0,
+    }
     assert (enriched_dir / "test_city_master_listings.parquet").exists()
     assert master["days_booked"].to_list() == [1, 2]
     assert master["occupancy_rate_pct"].to_list() == [50.0, 100.0]

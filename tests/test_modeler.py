@@ -7,7 +7,7 @@ from datetime import date
 import duckdb
 import polars as pl
 
-from pipeline import modeler
+from src.platform.data_engineering.modeling import modeler
 
 
 def test_build_star_schema_creates_dimensions_and_facts(monkeypatch, tmp_path):
@@ -117,14 +117,12 @@ def test_build_star_schema_creates_dimensions_and_facts(monkeypatch, tmp_path):
 
     con = duckdb.connect(str(db_path))
     try:
-        city = con.execute(
-            """
+        city = con.execute("""
             SELECT c.display_name
             FROM fact_listing_snapshot f
             JOIN dim_city c ON f.city_key = c.city_key
             LIMIT 1
-            """
-        ).fetchone()[0]
+            """).fetchone()[0]
         assert city == "Test City"
     finally:
         con.close()

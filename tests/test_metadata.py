@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import duckdb
 
-from pipeline import metadata
+from src.platform.common import metadata
 
 
 def test_metadata_run_lifecycle_and_lineage(tmp_path):

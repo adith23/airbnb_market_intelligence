@@ -16,9 +16,8 @@ Usage:
 
 from __future__ import annotations
 
-import textwrap
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -259,8 +258,7 @@ def cohens_d(group_a: np.ndarray, group_b: np.ndarray) -> tuple[float, str]:
         return 0.0, "negligible"
 
     pooled_sd = np.sqrt(
-        ((na - 1) * np.var(a, ddof=1) + (nb - 1) * np.var(b, ddof=1))
-        / (na + nb - 2)
+        ((na - 1) * np.var(a, ddof=1) + (nb - 1) * np.var(b, ddof=1)) / (na + nb - 2)
     )
 
     if pooled_sd == 0:
@@ -271,9 +269,7 @@ def cohens_d(group_a: np.ndarray, group_b: np.ndarray) -> tuple[float, str]:
     return round(d, 4), magnitude
 
 
-def rank_biserial_correlation(
-    u_statistic: float, n1: int, n2: int
-) -> tuple[float, str]:
+def rank_biserial_correlation(u_statistic: float, n1: int, n2: int) -> tuple[float, str]:
     """Effect size for Mann-Whitney U test.
 
     r = 1 - (2U / n1·n2). Range: [-1, 1].
@@ -295,9 +291,7 @@ def rank_biserial_correlation(
     return round(r, 4), magnitude
 
 
-def eta_squared(
-    f_statistic: float, df_between: int, df_within: int
-) -> tuple[float, str]:
+def eta_squared(f_statistic: float, df_between: int, df_within: int) -> tuple[float, str]:
     """Compute eta-squared from ANOVA / Kruskal-Wallis F or H statistic.
 
     η² ≈ (F × df_between) / (F × df_between + df_within)
@@ -373,15 +367,18 @@ def bootstrap_ci(
 
     if n == 0:
         return ConfidenceInterval(
-            mean=np.nan, ci_lower=np.nan, ci_upper=np.nan,
-            ci_level=ci_level, method="bootstrap", n=0,
+            mean=np.nan,
+            ci_lower=np.nan,
+            ci_upper=np.nan,
+            ci_level=ci_level,
+            method="bootstrap",
+            n=0,
         )
 
     rng = np.random.default_rng(random_state)
-    boot_stats = np.array([
-        statistic_func(rng.choice(clean, size=n, replace=True))
-        for _ in range(n_bootstrap)
-    ])
+    boot_stats = np.array(
+        [statistic_func(rng.choice(clean, size=n, replace=True)) for _ in range(n_bootstrap)]
+    )
 
     alpha = 1 - ci_level
     lower = np.percentile(boot_stats, alpha / 2 * 100)
@@ -419,8 +416,12 @@ def analytical_ci(
 
     if n < 2:
         return ConfidenceInterval(
-            mean=np.nan, ci_lower=np.nan, ci_upper=np.nan,
-            ci_level=ci_level, method="analytical", n=n,
+            mean=np.nan,
+            ci_lower=np.nan,
+            ci_upper=np.nan,
+            ci_level=ci_level,
+            method="analytical",
+            n=n,
         )
 
     mean = float(np.mean(clean))
@@ -482,9 +483,11 @@ def two_group_test(
     assumptions: list[AssumptionResult] = []
 
     # Independence (by design — one observation per listing)
-    assumptions.append(check_independence_note(
-        "Each observation represents a unique listing. Independence holds by design."
-    ))
+    assumptions.append(
+        check_independence_note(
+            "Each observation represents a unique listing. Independence holds by design."
+        )
+    )
 
     # Normality
     norm_a = check_normality(a, alpha=alpha)
@@ -522,8 +525,17 @@ def two_group_test(
 
     is_sig = p < alpha
     conclusion = _build_conclusion(
-        test_name, hypothesis_id, is_sig, p, d, effect_label,
-        d_mag, group_a_label, group_b_label, a, b,
+        test_name,
+        hypothesis_id,
+        is_sig,
+        p,
+        d,
+        effect_label,
+        d_mag,
+        group_a_label,
+        group_b_label,
+        a,
+        b,
     )
 
     return HypothesisTestResult(
@@ -586,9 +598,11 @@ def multi_group_test(
     n_total = sum(len(g) for g in group_arrays)
 
     assumptions: list[AssumptionResult] = []
-    assumptions.append(check_independence_note(
-        "Each observation represents a unique listing. Independence holds by design."
-    ))
+    assumptions.append(
+        check_independence_note(
+            "Each observation represents a unique listing. Independence holds by design."
+        )
+    )
 
     # Check normality of all groups (sample 3 if many groups)
     norm_checks = []
@@ -686,10 +700,12 @@ def paired_test(
     n = len(diffs)
 
     assumptions: list[AssumptionResult] = []
-    assumptions.append(check_independence_note(
-        "Observations are paired at the listing level. Each listing contributes "
-        "one paired difference (mean weekend price - mean weekday price)."
-    ))
+    assumptions.append(
+        check_independence_note(
+            "Observations are paired at the listing level. Each listing contributes "
+            "one paired difference (mean weekend price - mean weekday price)."
+        )
+    )
 
     norm_diff = check_normality(diffs, alpha=alpha)
     assumptions.append(norm_diff)
@@ -766,16 +782,18 @@ def _pairwise_posthoc(
         u, p = sp_stats.mannwhitneyu(groups[name_a], groups[name_b], alternative="two-sided")
         p_adj = min(p * m, 1.0)  # Bonferroni
         r, mag = rank_biserial_correlation(u, len(groups[name_a]), len(groups[name_b]))
-        records.append({
-            "Group A": name_a,
-            "Group B": name_b,
-            "U statistic": round(u, 1),
-            "p-value (raw)": p,
-            "p-value (Bonferroni)": round(p_adj, 6),
-            "Significant": p_adj < alpha,
-            "Effect size (r)": r,
-            "Magnitude": mag,
-        })
+        records.append(
+            {
+                "Group A": name_a,
+                "Group B": name_b,
+                "U statistic": round(u, 1),
+                "p-value (raw)": p,
+                "p-value (Bonferroni)": round(p_adj, 6),
+                "Significant": p_adj < alpha,
+                "Effect size (r)": r,
+                "Magnitude": mag,
+            }
+        )
 
     return pd.DataFrame(records).sort_values("p-value (raw)")
 
@@ -873,15 +891,17 @@ def ols_regression(
     # Coefficient table
     coef_records = []
     for name in model.params.index:
-        coef_records.append({
-            "Feature": name,
-            "Coefficient": round(model.params[name], 6),
-            "Std Error": round(model.bse[name], 6),
-            "t-statistic": round(model.tvalues[name], 3),
-            "p-value": model.pvalues[name],
-            "CI Lower": round(model.conf_int().loc[name, 0], 6),
-            "CI Upper": round(model.conf_int().loc[name, 1], 6),
-        })
+        coef_records.append(
+            {
+                "Feature": name,
+                "Coefficient": round(model.params[name], 6),
+                "Std Error": round(model.bse[name], 6),
+                "t-statistic": round(model.tvalues[name], 3),
+                "p-value": model.pvalues[name],
+                "CI Lower": round(model.conf_int().loc[name, 0], 6),
+                "CI Upper": round(model.conf_int().loc[name, 1], 6),
+            }
+        )
     coef_df = pd.DataFrame(coef_records)
 
     # Residual diagnostics
@@ -945,16 +965,18 @@ def apply_correction(
 
     m = len(p_values)
     if labels is None:
-        labels = [f"Test {i+1}" for i in range(m)]
+        labels = [f"Test {i + 1}" for i in range(m)]
 
     reject, p_adj, _, _ = multipletests(p_values, alpha=alpha, method=method)
 
-    return pd.DataFrame({
-        "Test": labels,
-        "p-value (raw)": [round(p, 6) for p in p_values],
-        f"p-value ({method})": [round(p, 6) for p in p_adj],
-        "Significant": reject,
-    })
+    return pd.DataFrame(
+        {
+            "Test": labels,
+            "p-value (raw)": [round(p, 6) for p in p_values],
+            f"p-value ({method})": [round(p, 6) for p in p_adj],
+            "Significant": reject,
+        }
+    )
 
 
 # ===================================================================
@@ -1010,15 +1032,17 @@ def format_ci_table(intervals: dict[str, ConfidenceInterval]) -> pd.DataFrame:
     """Format multiple CIs into a clean comparison table."""
     records = []
     for label, ci in intervals.items():
-        records.append({
-            "Group": label,
-            "Mean": round(ci.mean, 2),
-            f"CI Lower ({ci.ci_level*100:.0f}%)": ci.ci_lower,
-            f"CI Upper ({ci.ci_level*100:.0f}%)": ci.ci_upper,
-            "Width": round(ci.ci_upper - ci.ci_lower, 2),
-            "N": ci.n,
-            "Method": ci.method,
-        })
+        records.append(
+            {
+                "Group": label,
+                "Mean": round(ci.mean, 2),
+                f"CI Lower ({ci.ci_level * 100:.0f}%)": ci.ci_lower,
+                f"CI Upper ({ci.ci_level * 100:.0f}%)": ci.ci_upper,
+                "Width": round(ci.ci_upper - ci.ci_lower, 2),
+                "N": ci.n,
+                "Method": ci.method,
+            }
+        )
     return pd.DataFrame(records)
 
 

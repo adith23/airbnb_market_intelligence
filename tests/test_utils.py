@@ -8,9 +8,7 @@ Tests each utility function with:
 
 from __future__ import annotations
 
-import pytest
-
-from pipeline.utils import (
+from src.platform.common.utils import (
     clean_price,
     compute_schema_hash,
     detect_price_currency,
@@ -23,10 +21,10 @@ from pipeline.utils import (
     strip_html,
 )
 
-
 # ===================================================================
 # clean_price
 # ===================================================================
+
 
 class TestCleanPrice:
     def test_usd_format(self):
@@ -61,6 +59,7 @@ class TestCleanPrice:
 # parse_boolean
 # ===================================================================
 
+
 class TestParseBoolean:
     def test_true(self):
         assert parse_boolean("t") is True
@@ -88,6 +87,7 @@ class TestParseBoolean:
 # parse_amenities
 # ===================================================================
 
+
 class TestParseAmenities:
     def test_json_array(self):
         result = parse_amenities('["Wifi", "Kitchen", "Pool"]')
@@ -114,6 +114,7 @@ class TestParseAmenities:
 # ===================================================================
 # parse_bathrooms_text
 # ===================================================================
+
 
 class TestParseBathroomsText:
     def test_numeric(self):
@@ -147,6 +148,7 @@ class TestParseBathroomsText:
 # parse_rate_pct
 # ===================================================================
 
+
 class TestParseRatePct:
     def test_normal(self):
         assert parse_rate_pct("95%") == 0.95
@@ -174,6 +176,7 @@ class TestParseRatePct:
 # parse_host_verifications
 # ===================================================================
 
+
 class TestParseHostVerifications:
     def test_standard_list(self):
         result = parse_host_verifications("['email', 'phone', 'work_email']")
@@ -193,6 +196,7 @@ class TestParseHostVerifications:
 # ===================================================================
 # detect_price_currency
 # ===================================================================
+
 
 class TestDetectPriceCurrency:
     def test_usd(self):
@@ -215,6 +219,7 @@ class TestDetectPriceCurrency:
 # strip_html
 # ===================================================================
 
+
 class TestStripHtml:
     def test_basic_tags(self):
         assert strip_html("<b>Hello</b> world") == "Hello world"
@@ -236,6 +241,7 @@ class TestStripHtml:
 # compute_schema_hash
 # ===================================================================
 
+
 class TestComputeSchemaHash:
     def test_deterministic(self):
         h1 = compute_schema_hash(["id", "name", "price"])
@@ -256,6 +262,7 @@ class TestComputeSchemaHash:
 # ===================================================================
 # infer_file_type
 # ===================================================================
+
 
 class TestInferFileType:
     def test_listings_csv(self):
