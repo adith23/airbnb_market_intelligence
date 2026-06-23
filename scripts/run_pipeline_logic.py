@@ -113,12 +113,16 @@ def _tracked_stage(
         logger.info("Skipping already processed stage: city=%s stage=%s", city, stage)
         return StageExecutionResult(stage=stage, status="SKIPPED")
 
-    run_id = start_run(city=city, stage=stage, source_file=source_file, source_hash=source_hash)
+    run_id = start_run(
+        city=city, stage=stage, source_file=source_file, source_hash=source_hash
+    )
     configure_file_logging(run_id)
 
     try:
         rows_in, rows_out, rows_rejected, output = work()
-        complete_run(run_id, rows_in=rows_in, rows_out=rows_out, rows_rejected=rows_rejected)
+        complete_run(
+            run_id, rows_in=rows_in, rows_out=rows_out, rows_rejected=rows_rejected
+        )
         if lineage_output:
             record_lineage(
                 run_id=run_id,
@@ -247,7 +251,9 @@ def run_city_pipeline(
     return PipelineExecutionResult(city=city, stages=stages)
 
 
-def run_model_pipeline(city_names: list[str], force: bool = False) -> PipelineExecutionResult:
+def run_model_pipeline(
+    city_names: list[str], force: bool = False
+) -> PipelineExecutionResult:
     """Build the DuckDB star schema for one or more already-enriched cities."""
     from src.platform.data_engineering.modeling.modeler import build_star_schema
 
@@ -302,7 +308,8 @@ def run_all_pipelines(
             return None, None, 0, str(output)
 
         source_paths = [
-            get_enriched_dir() / f"{city}_master_listings.parquet" for city in successful_cities
+            get_enriched_dir() / f"{city}_master_listings.parquet"
+            for city in successful_cities
         ]
         unify_result = _tracked_stage(
             city=",".join(successful_cities),
@@ -314,7 +321,9 @@ def run_all_pipelines(
             force=force,
         )
         results.append(
-            PipelineExecutionResult(city=",".join(successful_cities), stages=[unify_result])
+            PipelineExecutionResult(
+                city=",".join(successful_cities), stages=[unify_result]
+            )
         )
 
     if successful_cities:
