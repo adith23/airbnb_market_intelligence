@@ -23,7 +23,7 @@ import json
 import logging
 import math
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -52,7 +52,7 @@ class FeatureSet:
     listing_ids: pd.Series
     metadata_columns: pd.DataFrame
     config_snapshot: dict
-    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     @property
     def n_samples(self) -> int:

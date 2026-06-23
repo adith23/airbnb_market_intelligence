@@ -16,7 +16,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -80,7 +80,7 @@ class ExperimentResult:
 
 def _generate_experiment_id(config: dict) -> str:
     """Create a unique experiment ID from timestamp + config hash."""
-    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     config_str = json.dumps(config, sort_keys=True, default=str)
     config_hash = hashlib.md5(config_str.encode()).hexdigest()[:8]
     return f"{timestamp}_{config_hash}"

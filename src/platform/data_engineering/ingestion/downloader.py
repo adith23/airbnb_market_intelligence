@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -244,7 +244,7 @@ def download_city(
         "display_name": city_config["display_name"],
         "scrape_date": city_config["scrape_date"],
         "base_url": base_url,
-        "downloaded_at": datetime.now(UTC).isoformat(),
+        "downloaded_at": datetime.now(timezone.utc).isoformat(),
         "files": download_results,
         "summary": summary,
     }
@@ -306,7 +306,7 @@ def verify_downloads(city_name: str) -> dict[str, Any]:
     report = {
         "city": city_name,
         "raw_dir": str(raw_dir),
-        "verified_at": datetime.now(UTC).isoformat(),
+        "verified_at": datetime.now(timezone.utc).isoformat(),
         "files": results,
         "all_present": all(r["exists"] for r in results),
         "all_readable": all(r["readable"] for r in results),

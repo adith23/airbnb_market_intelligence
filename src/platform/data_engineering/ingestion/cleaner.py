@@ -29,7 +29,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -1094,7 +1094,7 @@ def _save_cleaning_summary(
 
     summary = {
         "city": city_name,
-        "cleaned_at": datetime.now(UTC).isoformat(),
+        "cleaned_at": datetime.now(timezone.utc).isoformat(),
         "files": {file_type: asdict(result) for file_type, result in results.items()},
         "totals": {
             "input_rows": sum(r.input_rows for r in results.values()),

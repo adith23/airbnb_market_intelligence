@@ -16,7 +16,7 @@ import json
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -52,7 +52,7 @@ def _connect(db_path: str | Path | None = None) -> duckdb.DuckDBPyConnection:
 
 
 def _utc_now() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 def _fetch_dicts(
