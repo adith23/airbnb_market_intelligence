@@ -1,0 +1,74 @@
+name: GCP CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  DASHBOARD_IMAGE: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/airbnb-app-repo-prod/dashboard:latest
+
+jobs:
+  terraform:
+    name: 'Terraform Infrastructure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: 'Setup Terraform'
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: 'Terraform Init'
+        run: terraform init
+        working-directory: ./infra/terraform
+
+      - name: 'Terraform Apply'
+        run: terraform apply -auto-approve
+        working-directory: ./infra/terraform
+
+
+
+  build_and_deploy_dashboard:
+    name: 'Build and Deploy Dashboard to Cloud Run'
+    runs-on: ubuntu-latest
+    needs: terraform
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+          
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: 'Configure Docker for Artifact Registry'
+        run: gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+
+      - name: 'Build and Push Docker Images'
+        run: |
+          PIPELINE_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/airbnb-ml-models-prod/pipeline:latest"
+          
+          # Build and push Dashboard
+          docker build -t $DASHBOARD_IMAGE -f dashboard/Dockerfile .
+          docker push $DASHBOARD_IMAGE
+          
+          # Build and push Pipeline
+          docker build -t $PIPELINE_IMAGE -f pipeline.Dockerfile .
+          docker push $PIPELINE_IMAGE
+
+      - name: 'Deploy to Cloud Run and Update Jobs'
+        run: |
+          gcloud run deploy airbnb-dashboard-prod --image $DASHBOARD_IMAGE --region $REGION --quiet
+          gcloud run jobs update airbnb-data-pipeline-prod --image $PIPELINE_IMAGE --region $REGION --quiet
+          gcloud run jobs update airbnb-ml-pipeline-prod --image $PIPELINE_IMAGE --region $REGION --quiet

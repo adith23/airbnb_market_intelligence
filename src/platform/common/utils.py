@@ -34,11 +34,18 @@ HTML_ENTITY_RE = re.compile(r"&\w+;")
 # Airbnb boolean encoding
 BOOLEAN_MAP: dict[str, bool] = {"t": True, "f": False}
 
-# Project root resolved relative to this file's location
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-CONFIG_DIR = PROJECT_ROOT / "config"
-DATA_DIR = PROJECT_ROOT / "data"
-OUTPUT_DIR = PROJECT_ROOT / "outputs"
+# Base project paths
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
+CONFIG_DIR = ROOT_DIR / "config"
+
+# Allow overriding data directory for Airflow/Composer shared GCS FUSE volume
+AIRFLOW_DATA_DIR = os.environ.get("AIRFLOW_DATA_DIR")
+if AIRFLOW_DATA_DIR:
+    DATA_DIR = Path(AIRFLOW_DATA_DIR) / "airbnb_data"
+    OUTPUT_DIR = Path(AIRFLOW_DATA_DIR) / "outputs"
+else:
+    DATA_DIR = ROOT_DIR / "data"
+    OUTPUT_DIR = ROOT_DIR / "outputs"
 
 
 # ===================================================================

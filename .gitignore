@@ -41,3 +41,10 @@ Thumbs.db
 
 # ML Models
 *.joblib
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
