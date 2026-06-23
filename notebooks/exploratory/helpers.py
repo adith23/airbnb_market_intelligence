@@ -31,7 +31,7 @@ import seaborn as sns
 # Paths
 # ===================================================================
 
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _DB_PATH = _PROJECT_ROOT / "data" / "airbnb.duckdb"
 _SQL_DIR = _PROJECT_ROOT / "sql"
 _DATA_DIR = _PROJECT_ROOT / "data"

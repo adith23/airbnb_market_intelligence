@@ -759,7 +759,7 @@ def run_analytical_queries(
         if sql:
             return {"custom": _fetch_dicts(con, sql)}
 
-        query_path = Path(__file__).resolve().parent.parent / "sql" / "analytical_queries.sql"
+        query_path = Path(__file__).resolve().parent.parent.parent.parent / "sql" / "analytical_queries.sql"
         queries = _parse_named_queries(query_path.read_text(encoding="utf-8"))
         if query_name not in queries:
             available = ", ".join(sorted(queries))

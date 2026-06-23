@@ -24,11 +24,11 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from src.platform.common.utils import PROJECT_ROOT
+from src.platform.common.utils import DATA_DIR
 
 logger = logging.getLogger(__name__)
 
-MODELS_DIR = PROJECT_ROOT / "data" / "models"
+MODELS_DIR = DATA_DIR / "models"
 
 
 # ===================================================================

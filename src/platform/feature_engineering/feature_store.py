@@ -96,7 +96,7 @@ def load_ml_config(config_path: str | Path | None = None) -> dict[str, Any]:
         ValueError: If required keys are missing.
     """
     if config_path is None:
-        config_path = Path(__file__).resolve().parent.parent.parent / "config" / "ml_config.yaml"
+        config_path = Path(__file__).resolve().parent.parent.parent.parent / "config" / "ml_config.yaml"
     else:
         config_path = Path(config_path)
 
