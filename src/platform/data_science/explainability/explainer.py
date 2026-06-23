@@ -143,13 +143,13 @@ def compute_shap_values(
         explainer = shap.KernelExplainer(model.predict, background)
         shap_values = explainer.shap_values(X_sample, nsamples=200)
 
-    expected_value = (
+    expected_value = _safe_float(
         explainer.expected_value
         if np.isscalar(explainer.expected_value)
-        else float(explainer.expected_value[0])
+        else explainer.expected_value[0]
     )
 
-    return np.asarray(shap_values), float(expected_value), X_sample
+    return np.asarray(shap_values), expected_value, X_sample
 
 
 # ===================================================================
@@ -196,6 +196,18 @@ def global_feature_importance(
 # ===================================================================
 # Local Explanations
 # ===================================================================
+
+def _safe_float(val: Any) -> float:
+    try:
+        if hasattr(val, "item"):
+            val = val.item()
+        if isinstance(val, (list, tuple)) and len(val) == 1:
+            val = val[0]
+        if isinstance(val, str):
+            val = val.strip("[]'\" ")
+        return float(val)
+    except Exception:
+        return 0.0
 
 
 def local_explanations(
@@ -249,18 +261,18 @@ def local_explanations(
 
         # Top 5 positive and negative
         top_pos = [
-            {"feature": feature_names[fi], "shap_value": round(float(sv[fi]), 4)}
+            {"feature": feature_names[fi], "shap_value": round(_safe_float(sv[fi]), 4)}
             for fi in sorted_feat_idx[::-1][:5]
             if sv[fi] > 0
         ]
         top_neg = [
-            {"feature": feature_names[fi], "shap_value": round(float(sv[fi]), 4)}
+            {"feature": feature_names[fi], "shap_value": round(_safe_float(sv[fi]), 4)}
             for fi in sorted_feat_idx[:5]
             if sv[fi] < 0
         ]
 
-        true_val = float(y_true[idx]) if y_true is not None else np.nan
-        pred_val = float(y_pred[idx])
+        true_val = _safe_float(y_true[idx]) if y_true is not None else np.nan
+        pred_val = _safe_float(y_pred[idx])
 
         if log_transformed:
             true_val = float(np.expm1(true_val)) if not np.isnan(true_val) else np.nan
