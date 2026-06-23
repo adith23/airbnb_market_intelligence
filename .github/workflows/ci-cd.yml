@@ -24,6 +24,7 @@ jobs:
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
         with:
+          project_id: '${{ secrets.GCP_PROJECT_ID }}'
           workload_identity_provider: 'projects/605975162766/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
           service_account: '605975162766-compute@developer.gserviceaccount.com'
 
@@ -52,6 +53,7 @@ jobs:
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
         with:
+          project_id: '${{ secrets.GCP_PROJECT_ID }}'
           workload_identity_provider: 'projects/605975162766/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
           service_account: '605975162766-compute@developer.gserviceaccount.com'
           
