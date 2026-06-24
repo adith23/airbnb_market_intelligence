@@ -665,7 +665,7 @@ def _print_pipeline_result(result) -> None:
 def run_pipeline(city: str, skip_download: bool, force: bool) -> None:
     city = city.replace("-", "_")
     """Run stages 1-4 for a single city with metadata tracking."""
-    from scripts.run_pipeline_logic import run_city_pipeline
+    from pipelines.dags.data_pipeline_local import run_city_pipeline
 
     result = run_city_pipeline(city=city, skip_download=skip_download, force=force)
     _print_pipeline_result(result)
@@ -684,7 +684,7 @@ def run_pipeline(city: str, skip_download: bool, force: bool) -> None:
 def run_pipeline_all(cities: str, skip_download: bool, force: bool) -> None:
     cities = cities.replace("-", "_")
     """Run stages 1-4 for multiple cities, then unify and model."""
-    from scripts.run_pipeline_logic import run_all_pipelines
+    from pipelines.dags.data_pipeline_local import run_all_pipelines
 
     city_list = [city.strip() for city in cities.split(",") if city.strip()] or None
     results = run_all_pipelines(city_names=city_list, skip_download=skip_download, force=force)
@@ -716,7 +716,7 @@ def lineage(output_table: str | None) -> None:
 def train(config: str, force: bool) -> None:
     """§6.1: Train price prediction models with cross-validation."""
     from src.platform.common.utils import get_db_path
-    from src.platform.data_science.modeling.trainer import train_experiment
+    from src.platform.data_science.training.trainer import train_experiment
     from src.platform.feature_engineering.feature_store import (
         build_feature_matrix,
         load_ml_config,
@@ -742,8 +742,8 @@ def train(config: str, force: bool) -> None:
 def evaluate(experiment_id: str, config: str) -> None:
     """§6.1: Evaluate models on the held-out test set."""
     from src.platform.common.utils import get_db_path
-    from src.platform.data_science.evaluation.evaluator import evaluate_experiment
-    from src.platform.data_science.modeling.trainer import (
+    from src.platform.data_science.validation.evaluator import evaluate_experiment
+    from src.platform.data_science.training.trainer import (
         load_experiment,
     )
     from src.platform.feature_engineering.feature_store import (
@@ -790,7 +790,7 @@ def explain(experiment_id: str, config: str) -> None:
     """§6.1: Generate SHAP explainability report."""
     from src.platform.common.utils import get_db_path
     from src.platform.data_science.explainability.explainer import explain_model
-    from src.platform.data_science.modeling.trainer import load_experiment
+    from src.platform.data_science.training.trainer import load_experiment
     from src.platform.feature_engineering.feature_store import (
         build_feature_matrix,
         load_ml_config,
@@ -827,8 +827,8 @@ def explain(experiment_id: str, config: str) -> None:
 def bias_audit(experiment_id: str, config: str) -> None:
     """§6.4: Run model generalization & bias analysis."""
     from src.platform.common.utils import get_db_path
-    from src.platform.data_science.evaluation.bias_auditor import run_bias_audit
-    from src.platform.data_science.modeling.trainer import load_experiment
+    from src.platform.data_science.validation.bias_auditor import run_bias_audit
+    from src.platform.data_science.training.trainer import load_experiment
     from src.platform.feature_engineering.feature_store import (
         build_feature_matrix,
         load_ml_config,
@@ -865,7 +865,7 @@ def bias_audit(experiment_id: str, config: str) -> None:
 @click.option("--force", is_flag=True, help="Retrain models even if they exist.")
 def run_ml(config: str, force: bool) -> None:
     """Run the complete ML pipeline: train → evaluate → explain → bias-audit."""
-    from src.platform.mlops.orchestrator import run_ml_pipeline
+    from pipelines.dags.ml_pipeline_local import run_ml_pipeline
 
     result = run_ml_pipeline(config, force)
     if result.success:

@@ -8,7 +8,7 @@ Implements three complementary bias analysis strategies:
 Produces a comprehensive BiasAuditReport with actionable mitigations.
 
 Usage (from CLI via orchestrator):
-    from src.platform.data_science.evaluation.bias_auditor import run_bias_audit
+    from src.platform.data_science.validation.bias_auditor import run_bias_audit
     report = run_bias_audit(experiment_result, feature_set, split, config)
 """
 

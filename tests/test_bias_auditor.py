@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from src.platform.data_science.evaluation.bias_auditor import (
+from src.platform.data_science.validation.bias_auditor import (
     _cohens_d,
     compute_group_bias,
 )

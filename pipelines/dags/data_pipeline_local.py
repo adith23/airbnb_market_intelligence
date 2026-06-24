@@ -164,7 +164,7 @@ def run_city_pipeline(
             download_city,
             verify_downloads,
         )
-        from src.platform.data_science.evaluation.profiler import (
+        from src.platform.data_engineering.ingestion.profiler import (
             generate_data_quality_report,
             profile_city,
         )

@@ -172,19 +172,23 @@ def _create_parquet_view(
     path_list = ", ".join(_quote(path) for path in paths)
     source = f"read_parquet([{path_list}], union_by_name=true, filename=true)"
     if add_city_from_path:
-        con.execute(f"""
+        con.execute(
+            f"""
             CREATE OR REPLACE TEMP VIEW {view_name} AS
             SELECT
                 regexp_extract(filename, 'staging/([^/]+)/[^/]+\\.parquet', 1) AS city,
                 * EXCLUDE (filename)
             FROM {source}
-            """)
+            """
+        )
     else:
-        con.execute(f"""
+        con.execute(
+            f"""
             CREATE OR REPLACE TEMP VIEW {view_name} AS
             SELECT * EXCLUDE (filename)
             FROM {source}
-            """)
+            """
+        )
 
 
 def _create_dim_city(con: duckdb.DuckDBPyConnection, city_names: list[str]) -> None:
@@ -205,7 +209,8 @@ def _create_dim_city(con: duckdb.DuckDBPyConnection, city_names: list[str]) -> N
         )
 
     values_sql = ", ".join(rows)
-    con.execute(f"""
+    con.execute(
+        f"""
         CREATE OR REPLACE TABLE dim_city AS
         SELECT
             city_key::INTEGER AS city_key,
@@ -218,7 +223,8 @@ def _create_dim_city(con: duckdb.DuckDBPyConnection, city_names: list[str]) -> N
         FROM (
             VALUES {values_sql}
         ) AS t(city_key, city_name, display_name, country, currency_code, currency_symbol, timezone)
-        """)
+        """
+    )
 
 
 def _create_dim_host(con: duckdb.DuckDBPyConnection) -> None:
@@ -239,7 +245,9 @@ def _create_dim_host(con: duckdb.DuckDBPyConnection) -> None:
             "INTEGER",
             "host_listings_count",
         ),
-        _expr(cols, ["host_total_listings_count"], "INTEGER", "host_total_listings_count"),
+        _expr(
+            cols, ["host_total_listings_count"], "INTEGER", "host_total_listings_count"
+        ),
         _expr(cols, ["host_has_profile_pic"], "BOOLEAN", "host_has_profile_pic"),
         _expr(cols, ["host_identity_verified"], "BOOLEAN", "host_identity_verified"),
         _expr(cols, ["host_verification_count"], "INTEGER", "host_verification_count"),
@@ -247,7 +255,8 @@ def _create_dim_host(con: duckdb.DuckDBPyConnection) -> None:
         _expr(cols, ["host_tenure_years"], "DOUBLE", "host_tenure_years"),
     ]
 
-    con.execute(f"""
+    con.execute(
+        f"""
         CREATE OR REPLACE TABLE dim_host AS
         WITH host_base AS (
             SELECT {", ".join(select_fields)}
@@ -276,7 +285,8 @@ def _create_dim_host(con: duckdb.DuckDBPyConnection) -> None:
         )
         SELECT row_number() OVER (ORDER BY host_id) AS host_key, *
         FROM deduped
-        """)
+        """
+    )
 
 
 def _create_dim_property(con: duckdb.DuckDBPyConnection) -> None:
@@ -300,7 +310,8 @@ def _create_dim_property(con: duckdb.DuckDBPyConnection) -> None:
         _expr(cols, ["instant_bookable"], "BOOLEAN", "instant_bookable"),
         _expr(cols, ["license", "licence"], "VARCHAR", "license"),
     ]
-    con.execute(f"""
+    con.execute(
+        f"""
         CREATE OR REPLACE TABLE dim_property AS
         WITH property_base AS (
             SELECT {", ".join(fields)}
@@ -329,7 +340,8 @@ def _create_dim_property(con: duckdb.DuckDBPyConnection) -> None:
         )
         SELECT row_number() OVER (ORDER BY listing_id) AS property_key, *
         FROM deduped
-        """)
+        """
+    )
 
 
 def _create_dim_neighbourhood(con: duckdb.DuckDBPyConnection) -> None:
@@ -355,7 +367,8 @@ def _create_dim_neighbourhood(con: duckdb.DuckDBPyConnection) -> None:
         _expr(cols, ["neighbourhood_avg_rating"], "DOUBLE", "avg_rating"),
         _expr(cols, ["neighbourhood_avg_availability"], "DOUBLE", "avg_availability"),
     ]
-    con.execute(f"""
+    con.execute(
+        f"""
         CREATE OR REPLACE TABLE dim_neighbourhood AS
         WITH neighbourhood_base AS (
             SELECT {", ".join(fields)}
@@ -377,19 +390,22 @@ def _create_dim_neighbourhood(con: duckdb.DuckDBPyConnection) -> None:
         )
         SELECT row_number() OVER (ORDER BY city, neighbourhood_name) AS neighbourhood_key, *
         FROM deduped
-        """)
+        """
+    )
 
 
 def _create_dim_reviewer(con: duckdb.DuckDBPyConnection) -> None:
     """Create reviewer dimension from staged reviews."""
     if not _has_table(con, "stg_reviews"):
-        con.execute("""
+        con.execute(
+            """
             CREATE OR REPLACE TABLE dim_reviewer (
                 reviewer_key INTEGER,
                 reviewer_id BIGINT,
                 reviewer_name VARCHAR
             )
-            """)
+            """
+        )
         return
 
     cols = _column_names(con, "stg_reviews")
@@ -397,7 +413,8 @@ def _create_dim_reviewer(con: duckdb.DuckDBPyConnection) -> None:
         _expr(cols, ["reviewer_id"], "BIGINT", "reviewer_id"),
         _expr(cols, ["reviewer_name"], "VARCHAR", "reviewer_name"),
     ]
-    con.execute(f"""
+    con.execute(
+        f"""
         CREATE OR REPLACE TABLE dim_reviewer AS
         WITH reviewer_base AS (
             SELECT {", ".join(fields)}
@@ -411,7 +428,8 @@ def _create_dim_reviewer(con: duckdb.DuckDBPyConnection) -> None:
         )
         SELECT row_number() OVER (ORDER BY reviewer_id) AS reviewer_key, *
         FROM deduped
-        """)
+        """
+    )
 
 
 def _date_source_sql(con: duckdb.DuckDBPyConnection) -> str:
@@ -431,7 +449,8 @@ def _create_dim_date(con: duckdb.DuckDBPyConnection) -> None:
     ).fetchone()
 
     if min_date is None or max_date is None:
-        con.execute("""
+        con.execute(
+            """
             CREATE OR REPLACE TABLE dim_date (
                 date_key INTEGER,
                 full_date DATE,
@@ -445,10 +464,12 @@ def _create_dim_date(con: duckdb.DuckDBPyConnection) -> None:
                 is_weekend BOOLEAN,
                 week_of_year TINYINT
             )
-            """)
+            """
+        )
         return
 
-    con.execute(f"""
+    con.execute(
+        f"""
         CREATE OR REPLACE TABLE dim_date AS
         SELECT
             CAST(strftime(full_date, '%Y%m%d') AS INTEGER) AS date_key,
@@ -464,7 +485,8 @@ def _create_dim_date(con: duckdb.DuckDBPyConnection) -> None:
             CAST(strftime(full_date, '%W') AS TINYINT) AS week_of_year
         FROM generate_series(DATE {_quote(min_date)}, DATE {_quote(max_date)}, INTERVAL 1 DAY)
             AS t(full_date)
-        """)
+        """
+    )
 
 
 def _create_fact_listing_snapshot(con: duckdb.DuckDBPyConnection) -> None:
@@ -493,7 +515,9 @@ def _create_fact_listing_snapshot(con: duckdb.DuckDBPyConnection) -> None:
         _expr(cols, ["number_of_reviews_ltm"], "INTEGER", "number_of_reviews_ltm"),
         _expr(cols, ["review_scores_rating"], "DOUBLE", "review_scores_rating"),
         _expr(cols, ["review_scores_accuracy"], "DOUBLE", "review_scores_accuracy"),
-        _expr(cols, ["review_scores_cleanliness"], "DOUBLE", "review_scores_cleanliness"),
+        _expr(
+            cols, ["review_scores_cleanliness"], "DOUBLE", "review_scores_cleanliness"
+        ),
         _expr(cols, ["review_scores_checkin"], "DOUBLE", "review_scores_checkin"),
         _expr(
             cols,
@@ -510,7 +534,9 @@ def _create_fact_listing_snapshot(con: duckdb.DuckDBPyConnection) -> None:
         _expr(cols, ["availability_365"], "INTEGER", "availability_365"),
         _expr(cols, ["occupancy_rate_pct"], "DOUBLE", "occupancy_rate_pct"),
         _expr(cols, ["estimated_annual_revenue"], "DOUBLE", "estimated_annual_revenue"),
-        _expr(cols, ["estimated_monthly_revenue"], "DOUBLE", "estimated_monthly_revenue"),
+        _expr(
+            cols, ["estimated_monthly_revenue"], "DOUBLE", "estimated_monthly_revenue"
+        ),
         _expr(cols, ["avg_booked_price"], "DOUBLE", "avg_booked_price"),
         _expr(cols, ["price_per_bedroom"], "DOUBLE", "price_per_bedroom"),
         _expr(cols, ["price_per_person"], "DOUBLE", "price_per_person"),
@@ -520,7 +546,8 @@ def _create_fact_listing_snapshot(con: duckdb.DuckDBPyConnection) -> None:
         _expr(cols, ["is_professional_host"], "BOOLEAN", "is_professional_host"),
     ]
 
-    con.execute(f"""
+    con.execute(
+        f"""
         CREATE OR REPLACE TABLE fact_listing_snapshot AS
         WITH fact_base AS (
             SELECT {", ".join(fields)}
@@ -572,13 +599,15 @@ def _create_fact_listing_snapshot(con: duckdb.DuckDBPyConnection) -> None:
         LEFT JOIN dim_city c ON b.city = c.city_name
         LEFT JOIN dim_date d ON b.snapshot_date = d.full_date
         WHERE b.listing_id IS NOT NULL
-        """)
+        """
+    )
 
 
 def _create_fact_calendar(con: duckdb.DuckDBPyConnection) -> None:
     """Create daily calendar fact, if staged calendar data exists."""
     if not _has_table(con, "stg_calendar"):
-        con.execute("""
+        con.execute(
+            """
             CREATE OR REPLACE TABLE fact_calendar (
                 listing_key INTEGER,
                 date_key INTEGER,
@@ -589,14 +618,16 @@ def _create_fact_calendar(con: duckdb.DuckDBPyConnection) -> None:
                 minimum_nights INTEGER,
                 maximum_nights INTEGER
             )
-            """)
+            """
+        )
         return
 
     cols = _column_names(con, "stg_calendar")
     price = _raw_expr(cols, ["price_local", "price"], "DOUBLE")
     adjusted = _raw_expr(cols, ["adjusted_price_local", "adjusted_price"], "DOUBLE")
     rate_case = _city_usd_rate_case()
-    con.execute(f"""
+    con.execute(
+        f"""
         CREATE OR REPLACE TABLE fact_calendar AS
         SELECT
             f.listing_key,
@@ -612,13 +643,15 @@ def _create_fact_calendar(con: duckdb.DuckDBPyConnection) -> None:
             ON TRY_CAST(c.listing_id AS BIGINT) = f.listing_id
             AND c.city = (SELECT city_name FROM dim_city WHERE city_key = f.city_key)
         LEFT JOIN dim_date d ON TRY_CAST(c.date AS DATE) = d.full_date
-        """)
+        """
+    )
 
 
 def _create_fact_review(con: duckdb.DuckDBPyConnection) -> None:
     """Create review event fact, if staged review data exists."""
     if not _has_table(con, "stg_reviews"):
-        con.execute("""
+        con.execute(
+            """
             CREATE OR REPLACE TABLE fact_review (
                 review_id BIGINT,
                 listing_key INTEGER,
@@ -626,22 +659,24 @@ def _create_fact_review(con: duckdb.DuckDBPyConnection) -> None:
                 review_date_key INTEGER,
                 comment_length INTEGER
             )
-            """)
+            """
+        )
         return
 
     cols = _column_names(con, "stg_reviews")
     review_id = (
         "TRY_CAST(r.review_id AS BIGINT)"
         if "review_id" in cols
-        else "TRY_CAST(r.id AS BIGINT)"
-        if "id" in cols
-        else "CAST(NULL AS BIGINT)"
+        else "TRY_CAST(r.id AS BIGINT)" if "id" in cols else "CAST(NULL AS BIGINT)"
     )
     reviewer_id = (
-        "TRY_CAST(r.reviewer_id AS BIGINT)" if "reviewer_id" in cols else "CAST(NULL AS BIGINT)"
+        "TRY_CAST(r.reviewer_id AS BIGINT)"
+        if "reviewer_id" in cols
+        else "CAST(NULL AS BIGINT)"
     )
     comments = "length(r.comments)" if "comments" in cols else "CAST(NULL AS INTEGER)"
-    con.execute(f"""
+    con.execute(
+        f"""
         CREATE OR REPLACE TABLE fact_review AS
         SELECT
             COALESCE({review_id}, row_number() OVER (ORDER BY r.city, r.listing_id, r.date)) AS review_id,
@@ -655,7 +690,8 @@ def _create_fact_review(con: duckdb.DuckDBPyConnection) -> None:
             AND r.city = (SELECT city_name FROM dim_city WHERE city_key = f.city_key)
         LEFT JOIN dim_reviewer dr ON {reviewer_id} = dr.reviewer_id
         LEFT JOIN dim_date d ON TRY_CAST(r.date AS DATE) = d.full_date
-        """)
+        """
+    )
 
 
 def _table_counts(con: duckdb.DuckDBPyConnection) -> dict[str, int]:
@@ -671,7 +707,10 @@ def _table_counts(con: duckdb.DuckDBPyConnection) -> dict[str, int]:
         "fact_calendar",
         "fact_review",
     ]
-    return {table: con.execute(f"SELECT count(*) FROM {table}").fetchone()[0] for table in tables}
+    return {
+        table: con.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
+        for table in tables
+    }
 
 
 def build_star_schema(
@@ -686,8 +725,12 @@ def build_star_schema(
 
     city_names = [city.strip() for city in city_names if city.strip()]
     master_paths = _stage_required_enriched(city_names)
-    calendar_paths = _existing_staging_files(city_names, "calendar") if include_calendar else []
-    review_paths = _existing_staging_files(city_names, "reviews") if include_reviews else []
+    calendar_paths = (
+        _existing_staging_files(city_names, "calendar") if include_calendar else []
+    )
+    review_paths = (
+        _existing_staging_files(city_names, "reviews") if include_reviews else []
+    )
 
     warnings: list[str] = []
     if include_calendar and not calendar_paths:
@@ -698,7 +741,9 @@ def build_star_schema(
     con = get_connection(db_path)
     try:
         _create_parquet_view(con, "stg_master", master_paths)
-        _create_parquet_view(con, "stg_calendar", calendar_paths, add_city_from_path=True)
+        _create_parquet_view(
+            con, "stg_calendar", calendar_paths, add_city_from_path=True
+        )
         _create_parquet_view(con, "stg_reviews", review_paths, add_city_from_path=True)
 
         _create_dim_city(con, city_names)
@@ -725,7 +770,9 @@ def build_star_schema(
 
 def _parse_named_queries(sql_text: str) -> dict[str, str]:
     """Parse ``-- name: query_name`` blocks from analytical_queries.sql."""
-    matches = list(re.finditer(r"^--\s*name:\s*([a-zA-Z0-9_]+)\s*$", sql_text, flags=re.MULTILINE))
+    matches = list(
+        re.finditer(r"^--\s*name:\s*([a-zA-Z0-9_]+)\s*$", sql_text, flags=re.MULTILINE)
+    )
     queries: dict[str, str] = {}
     for idx, match in enumerate(matches):
         name = match.group(1)
@@ -759,7 +806,11 @@ def run_analytical_queries(
         if sql:
             return {"custom": _fetch_dicts(con, sql)}
 
-        query_path = Path(__file__).resolve().parent.parent.parent.parent / "sql" / "analytical_queries.sql"
+        query_path = (
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "sql"
+            / "analytical_queries.sql"
+        )
         queries = _parse_named_queries(query_path.read_text(encoding="utf-8"))
         if query_name not in queries:
             available = ", ".join(sorted(queries))

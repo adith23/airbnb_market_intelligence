@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from src.platform.data_science.modeling.trainer import (
+from src.platform.data_science.training.trainer import (
     _compute_fold_metrics,
     _generate_experiment_id,
     cross_validate_model,

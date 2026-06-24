@@ -5,7 +5,7 @@ with hyperparameter tuning, records metrics, and saves model artifacts
 to ``data/models/{experiment_id}/``.
 
 Usage (from CLI via orchestrator):
-    from src.platform.data_science.modeling.trainer import train_experiment
+    from src.platform.data_science.training.trainer import train_experiment
     result = train_experiment(feature_set, split, config)
 """
 

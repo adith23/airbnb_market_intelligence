@@ -12,7 +12,7 @@ Outputs are written to:
   - outputs/profiles/{city}_{file_type}_profile.json
 
 Usage:
-    from src.platform.data_science.evaluation.profiler import profile_city
+    from src.platform.data_engineering.ingestion.profiler import profile_city
     profiles = profile_city("paris")
 """
 

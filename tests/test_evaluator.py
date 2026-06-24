@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from src.platform.data_science.evaluation.evaluator import (
+from src.platform.data_science.validation.evaluator import (
     compute_metrics,
     stratified_error_analysis,
 )

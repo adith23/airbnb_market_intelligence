@@ -5,7 +5,7 @@ grouping dimensions, residual diagnostics, and generates both JSON
 and Markdown reports.
 
 Usage (from CLI via orchestrator):
-    from src.platform.data_science.evaluation.evaluator import evaluate_experiment
+    from src.platform.data_science.validation.evaluator import evaluate_experiment
     report = evaluate_experiment(experiment, split, config)
 """
 

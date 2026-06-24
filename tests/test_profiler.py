@@ -11,7 +11,7 @@ from pathlib import Path
 import polars as pl
 import pytest
 
-from src.platform.data_science.evaluation.profiler import (
+from src.platform.data_engineering.ingestion.profiler import (
     compute_column_stats,
     infer_schema,
     profile_file,
