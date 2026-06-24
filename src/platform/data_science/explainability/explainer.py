@@ -135,11 +135,20 @@ def compute_shap_values(
     )
 
     if model_type == "tree":
-        explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(X_sample)
+        try:
+            explainer = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(X_sample)
+        except ValueError as e:
+            if "could not convert string to float" in str(e).lower() and type(model).__name__ == "XGBRegressor":
+                logger.error("SHAP / XGBoost compatibility issue detected.")
+                raise RuntimeError(
+                    "SHAP is incompatible with the installed XGBoost version "
+                    "(known issue with XGBoost >= 3.0.0 and SHAP < 0.46.0). "
+                    "Please ensure SHAP is upgraded to >= 0.46.0."
+                ) from e
+            raise
     else:
         # Linear model: use masker-based explainer
-        background = shap.sample(X_sample, min(100, len(X_sample)))
         
         # KernelExplainer passes a numpy array to the predict function.
         # Sklearn pipelines (ColumnTransformer) require DataFrames with column names.
