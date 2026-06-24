@@ -140,7 +140,20 @@ def compute_shap_values(
     else:
         # Linear model: use masker-based explainer
         background = shap.sample(X_sample, min(100, len(X_sample)))
-        explainer = shap.KernelExplainer(model.predict, background)
+        
+        # KernelExplainer passes a numpy array to the predict function.
+        # Sklearn pipelines (ColumnTransformer) require DataFrames with column names.
+        def predict_fn(x_array):
+            df = pd.DataFrame(x_array, columns=X_sample.columns)
+            # Restore original dtypes
+            for col in X_sample.columns:
+                df[col] = df[col].astype(X_sample[col].dtype)
+            preds = model.predict(df)
+            if hasattr(preds, "flatten"):
+                preds = preds.flatten()
+            return preds.astype(float)
+
+        explainer = shap.KernelExplainer(predict_fn, background)
         shap_values = explainer.shap_values(X_sample, nsamples=200)
 
     expected_value = _safe_float(
@@ -199,14 +212,26 @@ def global_feature_importance(
 
 def _safe_float(val: Any) -> float:
     try:
-        if hasattr(val, "item"):
-            val = val.item()
-        if isinstance(val, (list, tuple)) and len(val) == 1:
-            val = val[0]
+        # Extract scalar from numpy arrays or pandas Series
+        if hasattr(val, "item") and callable(val.item):
+            try:
+                val = val.item()
+            except ValueError:
+                pass # Not a scalar array
+        
+        # Extract from list/tuple
+        if isinstance(val, (list, tuple, np.ndarray)):
+            if len(val) > 0:
+                val = val[0]
+            else:
+                return 0.0
+                
+        # Clean string representations
         if isinstance(val, str):
             val = val.strip("[]'\" ")
+            
         return float(val)
-    except Exception:
+    except Exception as e:
         return 0.0
 
 
@@ -496,13 +521,13 @@ def explain_model(
     # Match y_test to the subsample indices
     sample_indices = X_sample.index
     y_true_sample = (
-        split.y_test.iloc[sample_indices].values if hasattr(split.y_test, "iloc") else None
+        split.y_test.loc[sample_indices].values if hasattr(split.y_test, "loc") else None
     )
 
     # Match metadata to the subsample
     meta_sample = (
-        split.meta_test.iloc[sample_indices]
-        if hasattr(split.meta_test, "iloc")
+        split.meta_test.loc[sample_indices]
+        if hasattr(split.meta_test, "loc")
         else split.meta_test
     )
 
