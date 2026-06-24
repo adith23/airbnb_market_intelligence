@@ -126,52 +126,38 @@ def compute_shap_values(
     else:
         X_sample = X.copy()
 
-    model_type = _detect_model_type(model)
     logger.info(
-        "Computing SHAP values: model_type=%s, n_samples=%d, n_features=%d",
-        model_type,
+        "Computing SHAP values: n_samples=%d, n_features=%d",
         len(X_sample),
         X_sample.shape[1],
     )
 
-    if model_type == "tree":
-        try:
-            explainer = shap.TreeExplainer(model)
-            shap_values = explainer.shap_values(X_sample)
-        except ValueError as e:
-            if "could not convert string to float" in str(e).lower() and type(model).__name__ == "XGBRegressor":
-                logger.error("SHAP / XGBoost compatibility issue detected.")
-                raise RuntimeError(
-                    "SHAP is incompatible with the installed XGBoost version "
-                    "(known issue with XGBoost >= 3.0.0 and SHAP < 0.46.0). "
-                    "Please ensure SHAP is upgraded to >= 0.46.0."
-                ) from e
-            raise
+    # Use a small background dataset for models that require masking (e.g., linear)
+    background = X_sample.sample(min(100, len(X_sample)), random_state=random_state)
+
+    # Modern SHAP API: handles Tree/Linear/Deep routing automatically
+    explainer = shap.Explainer(model, background)
+    shap_values_obj = explainer(X_sample)
+
+    # Safely extract numpy array (v2 Explanation object vs v1 numpy return)
+    if hasattr(shap_values_obj, "values"):
+        shap_array = shap_values_obj.values
     else:
-        # Linear model: use masker-based explainer
-        
-        # KernelExplainer passes a numpy array to the predict function.
-        # Sklearn pipelines (ColumnTransformer) require DataFrames with column names.
-        def predict_fn(x_array):
-            df = pd.DataFrame(x_array, columns=X_sample.columns)
-            # Restore original dtypes
-            for col in X_sample.columns:
-                df[col] = df[col].astype(X_sample[col].dtype)
-            preds = model.predict(df)
-            if hasattr(preds, "flatten"):
-                preds = preds.flatten()
-            return preds.astype(float)
+        shap_array = np.asarray(shap_values_obj)
 
-        explainer = shap.KernelExplainer(predict_fn, background)
-        shap_values = explainer.shap_values(X_sample, nsamples=200)
+    # Safely extract expected value
+    if hasattr(shap_values_obj, "base_values") and shap_values_obj.base_values is not None:
+        expected_value = float(np.mean(shap_values_obj.base_values))
+    elif hasattr(explainer, "expected_value") and explainer.expected_value is not None:
+        expected_value = _safe_float(
+            explainer.expected_value
+            if np.isscalar(explainer.expected_value)
+            else np.ravel(explainer.expected_value)[0]
+        )
+    else:
+        expected_value = 0.0
 
-    expected_value = _safe_float(
-        explainer.expected_value
-        if np.isscalar(explainer.expected_value)
-        else explainer.expected_value[0]
-    )
-
-    return np.asarray(shap_values), expected_value, X_sample
+    return shap_array, expected_value, X_sample
 
 
 # ===================================================================
@@ -219,6 +205,7 @@ def global_feature_importance(
 # Local Explanations
 # ===================================================================
 
+
 def _safe_float(val: Any) -> float:
     try:
         # Extract scalar from numpy arrays or pandas Series
@@ -226,19 +213,19 @@ def _safe_float(val: Any) -> float:
             try:
                 val = val.item()
             except ValueError:
-                pass # Not a scalar array
-        
+                pass  # Not a scalar array
+
         # Extract from list/tuple
         if isinstance(val, (list, tuple, np.ndarray)):
             if len(val) > 0:
                 val = val[0]
             else:
                 return 0.0
-                
+
         # Clean string representations
         if isinstance(val, str):
             val = val.strip("[]'\" ")
-            
+
         return float(val)
     except Exception as e:
         return 0.0
@@ -357,7 +344,9 @@ def per_city_importance(
     results = {}
 
     if city_column not in meta_sample.columns:
-        logger.warning("City column '%s' not in metadata — skipping per-city analysis", city_column)
+        logger.warning(
+            "City column '%s' not in metadata — skipping per-city analysis", city_column
+        )
         return results
 
     for city in meta_sample[city_column].unique():
@@ -530,7 +519,9 @@ def explain_model(
     # Match y_test to the subsample indices
     sample_indices = X_sample.index
     y_true_sample = (
-        split.y_test.loc[sample_indices].values if hasattr(split.y_test, "loc") else None
+        split.y_test.loc[sample_indices].values
+        if hasattr(split.y_test, "loc")
+        else None
     )
 
     # Match metadata to the subsample
@@ -565,7 +556,9 @@ def explain_model(
         shap_path_file = output_dir / "shap_values.parquet"
         import polars as pl
 
-        shap_pl = pl.DataFrame({col: shap_vals[:, i] for i, col in enumerate(X_sample.columns)})
+        shap_pl = pl.DataFrame(
+            {col: shap_vals[:, i] for i, col in enumerate(X_sample.columns)}
+        )
         shap_pl.write_parquet(shap_path_file)
         shap_path = str(shap_path_file)
     except Exception as exc:
