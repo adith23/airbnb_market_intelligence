@@ -126,6 +126,9 @@ def compute_shap_values(
     else:
         X_sample = X.copy()
 
+    # SHAP 0.46+ / Numpy 2.x bug: convert boolean columns to float to avoid dtype errors
+    X_sample = X_sample.astype(float)
+
     model_type = _detect_model_type(model)
     logger.info(
         "Computing SHAP values: model_type=%s, n_samples=%d, n_features=%d",

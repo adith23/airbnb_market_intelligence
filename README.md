@@ -70,6 +70,7 @@ Raw Data (CSV/GZ) ──→ Profile & QA ──→ Clean (Parquet) ──→ Enr
 | **`run-pipeline --city <name>`** | **§3.5** | **Run ingest, clean, enrich, and model with metadata tracking** |
 | **`run-pipeline-all`** | **§3.5** | **Run all configured cities, unify masters, and build multi-city model** |
 | **`lineage --table <name>`** | **§3.5** | **Show recorded source-to-output lineage** |
+| **`run-ml`** | **§4.x** | **Run the complete ML pipeline: train → evaluate → explain → bias-audit** |
 
 Add `--verbose` / `-v` for debug logging.
 
@@ -132,9 +133,17 @@ Section 3.5 automation adds:
 Useful commands:
 
 ```bash
+# Run data pipeline
 python main.py run-pipeline --city paris --skip-download
 python main.py run-pipeline-all --skip-download
 python main.py lineage --table duckdb.star_schema
+
+# Run Machine Learning pipeline (train → evaluate → explain → bias-audit)
+python main.py run-ml
+
+# Run interactive dashboard
+cd dashboard
+streamlit run app.py
 ```
 
 ## Engineering Decision Log

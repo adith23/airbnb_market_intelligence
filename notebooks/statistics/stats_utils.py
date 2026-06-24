@@ -906,7 +906,7 @@ def ols_regression(
 
     # Residual diagnostics
     residuals = model.resid
-    jb_stat, jb_p, _, _ = sp_stats.jarque_bera(residuals)
+    jb_stat, jb_p = sp_stats.jarque_bera(residuals)
 
     try:
         bp_stat, bp_p, _, _ = het_breuschpagan(residuals, X_with_const)
