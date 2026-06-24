@@ -5,7 +5,7 @@ and bias auditing. Integrates with the existing pipeline automation
 framework to record metadata in DuckDB.
 
 Usage (from CLI):
-    from src.platform.mlops.orchestrator import run_ml_pipeline
+    from pipelines.dags.ml_pipeline_local import run_ml_pipeline
     result = run_ml_pipeline(config_path, force=False)
 """
 

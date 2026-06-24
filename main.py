@@ -100,7 +100,7 @@ def download(city: str, force: bool) -> None:
 def profile(city: str) -> None:
     city = city.replace("-", "_")
     """Run schema discovery and statistical profiling for a city."""
-    from src.platform.data_science.evaluation.profiler import profile_city
+    from src.platform.data_engineering.ingestion.profiler import profile_city
 
     click.echo(f"📊 Profiling data for: {city}")
     profiles = profile_city(city)
@@ -261,7 +261,7 @@ def explore(city: str, skip_download: bool) -> None:
     from src.platform.data_engineering.modeling.relationship_mapper import (
         generate_relationship_report,
     )
-    from src.platform.data_science.evaluation.profiler import profile_city
+    from src.platform.data_engineering.ingestion.profiler import profile_city
 
     click.echo(f"🚀 Running full exploration pipeline for: {city}")
     click.echo("=" * 60)
@@ -316,7 +316,7 @@ def explore_all(skip_download: bool) -> None:
     from src.platform.data_engineering.modeling.relationship_mapper import (
         generate_relationship_report,
     )
-    from src.platform.data_science.evaluation.profiler import profile_city
+    from src.platform.data_engineering.ingestion.profiler import profile_city
 
     all_cities = load_city_config()
     city_names = list(all_cities.keys())
@@ -380,7 +380,7 @@ def quality_report(city: str) -> None:
     Produces a single report covering profiling, completeness analysis,
     and IQR-based outlier detection across all data files for a city.
     """
-    from src.platform.data_science.evaluation.profiler import (
+    from src.platform.data_engineering.ingestion.profiler import (
         generate_data_quality_report,
     )
 
@@ -509,7 +509,7 @@ def ingest(city: str, skip_download: bool) -> None:
         download_city,
         verify_downloads,
     )
-    from src.platform.data_science.evaluation.profiler import (
+    from src.platform.data_engineering.ingestion.profiler import (
         generate_data_quality_report,
         profile_city,
     )
