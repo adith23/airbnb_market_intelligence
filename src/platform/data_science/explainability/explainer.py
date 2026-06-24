@@ -126,18 +126,32 @@ def compute_shap_values(
     else:
         X_sample = X.copy()
 
+    model_type = _detect_model_type(model)
     logger.info(
-        "Computing SHAP values: n_samples=%d, n_features=%d",
+        "Computing SHAP values: model_type=%s, n_samples=%d, n_features=%d",
+        model_type,
         len(X_sample),
         X_sample.shape[1],
     )
 
-    # Use a small background dataset for models that require masking (e.g., linear)
-    background = X_sample.sample(min(100, len(X_sample)), random_state=random_state)
-
-    # Modern SHAP API: handles Tree/Linear/Deep routing automatically
-    explainer = shap.Explainer(model, background)
-    shap_values_obj = explainer(X_sample)
+    if model_type == "tree":
+        # Natively handles XGBoost without falling back to a callable masker
+        explainer = shap.TreeExplainer(model)
+        shap_values_obj = explainer(X_sample)
+    else:
+        # Use a small background dataset for models that require masking (e.g., linear)
+        background = X_sample.sample(min(100, len(X_sample)), random_state=random_state)
+        
+        # Pass a callable to avoid "model is not callable" errors in default Explainer
+        def predict_fn(x_array):
+            df = pd.DataFrame(x_array, columns=X_sample.columns)
+            for col in X_sample.columns:
+                df[col] = df[col].astype(X_sample[col].dtype)
+            preds = model.predict(df)
+            return preds.flatten() if hasattr(preds, "flatten") else preds
+            
+        explainer = shap.Explainer(predict_fn, background)
+        shap_values_obj = explainer(X_sample)
 
     # Safely extract numpy array (v2 Explanation object vs v1 numpy return)
     if hasattr(shap_values_obj, "values"):
