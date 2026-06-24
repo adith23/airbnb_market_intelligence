@@ -141,7 +141,7 @@ def compute_shap_values(
     else:
         # Use a small background dataset for models that require masking (e.g., linear)
         background = X_sample.sample(min(100, len(X_sample)), random_state=random_state)
-        
+
         # Pass a callable to avoid "model is not callable" errors in default Explainer
         def predict_fn(x_array):
             df = pd.DataFrame(x_array, columns=X_sample.columns)
@@ -149,7 +149,7 @@ def compute_shap_values(
                 df[col] = df[col].astype(X_sample[col].dtype)
             preds = model.predict(df)
             return preds.flatten() if hasattr(preds, "flatten") else preds
-            
+
         explainer = shap.Explainer(predict_fn, background)
         shap_values_obj = explainer(X_sample)
 
@@ -160,7 +160,10 @@ def compute_shap_values(
         shap_array = np.asarray(shap_values_obj)
 
     # Safely extract expected value
-    if hasattr(shap_values_obj, "base_values") and shap_values_obj.base_values is not None:
+    if (
+        hasattr(shap_values_obj, "base_values")
+        and shap_values_obj.base_values is not None
+    ):
         expected_value = float(np.mean(shap_values_obj.base_values))
     elif hasattr(explainer, "expected_value") and explainer.expected_value is not None:
         expected_value = _safe_float(
@@ -528,7 +531,7 @@ def explain_model(
     )
 
     # Predictions for the subsample
-    y_pred_sample = best_model.predict(X_sample)
+    y_pred_sample = np.asarray(best_model.predict(X_sample)).astype(float)
 
     # Match y_test to the subsample indices
     sample_indices = X_sample.index
