@@ -76,7 +76,7 @@ resource "google_cloud_run_v2_job" "ml_pipeline" {
       containers {
         image = "us-docker.pkg.dev/cloudrun/container/hello" # Replaced by CI/CD
         
-        command = ["python", "-c", "from pipelines.dags.ml_pipeline_local import run_ml_pipeline; run_ml_pipeline('config/ml_config.yaml')"]
+        command = ["python", "main.py", "run-ml"]
         
         resources {
           limits = {

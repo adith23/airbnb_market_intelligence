@@ -48,5 +48,5 @@ jobs:
       - name: 'Deploy to Cloud Run and Update Jobs'
         run: |
           gcloud run deploy airbnb-dashboard-prod --image $DASHBOARD_IMAGE --region $REGION --allow-unauthenticated --quiet
-          gcloud run jobs update airbnb-data-pipeline-prod --image $PIPELINE_IMAGE --region $REGION --quiet
-          gcloud run jobs update airbnb-ml-pipeline-prod --image $PIPELINE_IMAGE --region $REGION --quiet
+          gcloud run jobs update airbnb-data-pipeline-prod --image $PIPELINE_IMAGE --command "python,main.py,run-pipeline-all" --region $REGION --quiet
+          gcloud run jobs update airbnb-ml-pipeline-prod --image $PIPELINE_IMAGE --command "python,main.py,run-ml" --region $REGION --quiet
