@@ -3,10 +3,10 @@ name: Continuous Integration (CI)
 on:
   pull_request:
     branches:
-      - main
+      - dev
   push:
     branches-ignore:
-      - main 
+      - dev 
 
 jobs:
   test_and_lint:

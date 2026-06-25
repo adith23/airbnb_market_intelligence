@@ -168,20 +168,24 @@ def fetch_temporal_trends(city_key: str | None = None) -> pd.DataFrame:
 
     query = f"""
         SELECT 
-            c.date_key as date,
+            d.full_date as date,
             AVG(c.price_usd) as avg_price,
             100.0 - (SUM(CASE WHEN c.is_available THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) as booked_occupancy_rate
         FROM fact_calendar c
+        JOIN dim_date d ON c.date_key = d.date_key
         {city_join}
         {where_clause}
-        GROUP BY c.date_key
-        ORDER BY c.date_key
+        GROUP BY d.full_date
+        ORDER BY d.full_date
     """
     # DuckDB is fast, but we'll aggregate to monthly if returning to pandas takes too long
     # Actually, daily is fine for a year (365 rows).
     df = conn.execute(query).df()
     if not df.empty:
-        df["date"] = pd.to_datetime(df["date"])
+        if pd.api.types.is_integer_dtype(df["date"]):
+            df["date"] = pd.to_datetime(df["date"].astype(str), format="%Y%m%d")
+        else:
+            df["date"] = pd.to_datetime(df["date"])
     return df
 
 
@@ -276,9 +280,11 @@ def fetch_neighbourhood_interventions(city_key: str | None = None) -> pd.DataFra
 
 
 @st.cache_data(ttl=3600)
-def fetch_available_cities() -> list[str]:
-    """Fetch distinct cities from the database."""
+def fetch_available_cities() -> dict[int, str]:
+    """Fetch available cities as a mapping of city_key (int) -> display_name (str)."""
     conn = get_db_connection()
-    query = "SELECT DISTINCT city_key FROM dim_city ORDER BY city_key"
+    query = "SELECT city_key, display_name FROM dim_city ORDER BY display_name"
     df = conn.execute(query).df()
-    return df["city_key"].tolist() if not df.empty else []
+    if df.empty:
+        return {}
+    return dict(zip(df["city_key"], df["display_name"]))

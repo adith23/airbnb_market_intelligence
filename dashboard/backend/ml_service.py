@@ -1,7 +1,6 @@
 """ML Client to load models and perform inference."""
 
 import json
-
 import joblib
 import pandas as pd
 import streamlit as st
@@ -39,7 +38,6 @@ def get_latest_run() -> str:
 LATEST_RUN = get_latest_run()
 
 
-
 @st.cache_resource
 def load_models():
     """Load the XGBoost and Quantile Regression models into memory once."""
@@ -51,7 +49,6 @@ def load_models():
         q_high = joblib.load(model_path / "q_0.90.joblib")
     except (FileNotFoundError, ImportError):
         q_low, q_high = None, None
-
 
     with open(model_path / "feature_columns.json") as f:
         features = json.load(f)

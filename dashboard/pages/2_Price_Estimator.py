@@ -1,6 +1,6 @@
 import streamlit as st
 
-from src.platform.mlops.serving.ml_client import predict_price
+from dashboard.backend.ml_service import predict_price
 
 st.set_page_config(page_title="Price Estimator", page_icon="🤖", layout="wide")
 

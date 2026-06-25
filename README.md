@@ -94,7 +94,7 @@ If running locally, ensure you have completed the [Prerequisites](#prerequisites
   ```
 - **Step 3 — Launch the Dashboard**:
   ```bash
-  cd dashboard && streamlit run app.py
+  cd dashboard && streamlit run Home.py
   ```
   *Access the local dashboard at **http://localhost:8501**.*
 
@@ -123,7 +123,7 @@ If running locally, ensure you have completed the [Prerequisites](#prerequisites
 └────────────────────────────────────────────────┼────────────────────--┘
                                                  │
            ┌─────────────────────────────────────┤
-           │  feature_store.py                   │  data_client.py
+           │  feature_store.py                   │  data_service.py
            │  (ML interface)                     │  (Dashboard interface)
            ▼                                     ▼
 ┌──────────────────────────┐   ┌──────────────────────────────────────┐
@@ -182,8 +182,8 @@ python -m venv .venv
 # macOS / Linux
 source .venv/bin/activate
 
-# Windows (PowerShell)
-.venv\Scripts\Activate.ps1
+# Windows 
+.venv\Scripts\Activate
 
 # 3. Install core pipeline dependencies
 pip install -r requirements.txt
@@ -400,7 +400,7 @@ python main.py bias-audit --experiment-id <experiment_id>
 
 ```bash
 cd dashboard
-streamlit run app.py
+streamlit run Home.py
 ```
 
 The app opens at `http://localhost:8501`. It reads `data/airbnb.duckdb` and
@@ -410,7 +410,7 @@ To enable the AI SQL assistant, set your Gemini API key before launching:
 
 ```bash
 export GEMINI_API_KEY="your-api-key-here"
-streamlit run app.py
+streamlit run Home.py
 ```
 
 Without the key, the assistant falls back to a deterministic mock response automatically.
@@ -469,7 +469,7 @@ Launch with:
 
 ```bash
 cd dashboard
-streamlit run app.py
+streamlit run Home.py
 # Opens at http://localhost:8501
 ```
 
@@ -528,12 +528,12 @@ airbnb_market_intelligence/
 │       │   │   ├── profiler.py          # Lazy Polars profiling; schema + statistical JSON
 │       │   │   ├── validator.py         # Constraint checks → quality reports
 │       │   │   └── cleaner.py           # Raw CSV/GZ → validated staging Parquet (vectorised)
-│       │   ├── modeling/
-│       │   │   ├── modeler.py           # DuckDB star schema builder
-│       │   │   ├── relationship_mapper.py  # PK/FK and referential integrity
-│       │   │   └── harmonizer.py        # Cross-city schema comparison
-│       │   └── storage/
-│       │       └── data_client.py       # Cached DuckDB queries for the dashboard
+│       │   │── modeling/
+│       │       ├── modeler.py           # DuckDB star schema builder
+│       │       ├── relationship_mapper.py  # PK/FK and referential integrity
+│       │       └── harmonizer.py        # Cross-city schema comparison
+│       │   
+│       │      
 │       │
 │       ├── data_science/
 │       │   ├── training/
@@ -557,10 +557,14 @@ airbnb_market_intelligence/
 │       └── ml_pipeline_local.py         # ML pipeline orchestrator with metadata tracking
 │
 ├── dashboard/
-│   ├── app.py                           # Streamlit entry point (multi-page app)
+│   ├── Home.py                          # Streamlit entry point (multi-page app)
 │   ├── config.py                        # DB_PATH, MODELS_DIR, UI settings
-│   └── components/
-│       └── ai_chat.py                   # AI SQL Assistant UI component
+│   ├── components/
+│   │   └── ai_chat.py                   # AI SQL Assistant UI component
+│   └── backend/
+│       ├── data_service.py              # Cached DuckDB queries for the dashboard
+│       ├── ml_service.py                # XGBoost and Quantile Regression inference client
+│       └── shap_explainer.py            # SHAP TreeExplainer calculation and rendering
 │
 ├── sql/
 │   └── analytical_queries.sql           # Named queries run via `python main.py query`
@@ -784,7 +788,7 @@ families on the held-out test set.
 **8. Bias audit** — `outputs/ml/{experiment_id}/bias_audit_report.json` — per-
 neighbourhood LONO-CV gaps, cross-city transfer results, and overall fairness risk rating.
 
-**9. Dashboard** — `cd dashboard && streamlit run app.py` — interactive exploration of
+**9. Dashboard** — `cd dashboard && streamlit run Home.py` — interactive exploration of
 all findings, with the Intervention Radar and Valuation Arbitrage pages being the most
 novel outputs not surfaced elsewhere.
 

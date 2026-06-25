@@ -176,7 +176,7 @@ def _create_parquet_view(
             f"""
             CREATE OR REPLACE TEMP VIEW {view_name} AS
             SELECT
-                regexp_extract(filename, 'staging/([^/]+)/[^/]+\\.parquet', 1) AS city,
+                regexp_extract(replace(filename, '\\\\', '/'), 'staging/([^/]+)/[^/]+\\.parquet', 1) AS city,
                 * EXCLUDE (filename)
             FROM {source}
             """

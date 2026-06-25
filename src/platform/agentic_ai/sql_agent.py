@@ -6,7 +6,7 @@ import re
 
 import pandas as pd
 
-from src.platform.data_engineering.storage.data_client import get_db_connection
+from dashboard.backend.data_service import get_db_connection
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +33,43 @@ def _get_llm_client():
         from google import genai
 
         api_key = os.environ.get("GEMINI_API_KEY")
+        
+        # 1. Fallback: Check local .env file
+        if not api_key:
+            try:
+                from pathlib import Path
+                # Check current dir, parent dir, and project root based on file structure
+                env_paths = [
+                    Path(".env"),
+                    Path("../.env"),
+                    Path(__file__).resolve().parents[3] / ".env"
+                ]
+                for p in env_paths:
+                    if p.exists():
+                        with open(p) as f:
+                            for line in f:
+                                line = line.strip()
+                                if line and not line.startswith("#") and "=" in line:
+                                    k, v = line.split("=", 1)
+                                    if k.strip() == "GEMINI_API_KEY":
+                                        api_key = v.strip().strip('"').strip("'")
+                                        break
+                        if api_key:
+                            break
+            except Exception:
+                pass
+
         if api_key:
             return genai.Client(api_key=api_key)
     except ImportError:
         logger.warning("google-genai not installed. Falling back to MockLLM.")
     return MockLLM()
 
+
+def is_mock_llm() -> bool:
+    """Check if the LLM client is a fallback MockLLM."""
+    return isinstance(_get_llm_client(), MockLLM)
+    
 
 def get_database_schema() -> str:
     """Return a curated DDL for the LLM to understand the star schema."""
@@ -153,7 +184,10 @@ def synthesize_results(user_query: str, df: pd.DataFrame) -> str:
         return "The query returned no results for this market context."
 
     client = _get_llm_client()
-    data_str = df.head(10).to_markdown()
+    try:
+        data_str = df.head(10).to_markdown()
+    except ImportError:
+        data_str = df.head(10).to_string()
 
     prompt = f"""
     You are an expert Business Analyst. 

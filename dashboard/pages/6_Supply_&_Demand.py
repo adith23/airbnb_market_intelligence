@@ -3,7 +3,7 @@
 import altair as alt
 import streamlit as st
 
-from src.platform.data_engineering.storage.data_client import (
+from dashboard.backend.data_service import (
     fetch_available_cities,
     fetch_host_concentration,
     fetch_temporal_trends,
@@ -14,9 +14,15 @@ st.title("📈 Supply Concentration & Temporal Trends")
 
 # Global Filters
 st.sidebar.header("Filters")
-cities = ["All Cities"] + fetch_available_cities()
-selected_city = st.sidebar.selectbox("Select Market", cities, key="sup_city")
-city_key = None if selected_city == "All Cities" else selected_city
+cities_map = fetch_available_cities()
+selected_city_name = st.sidebar.selectbox(
+    "Select Market",
+    options=["All Cities"] + list(cities_map.values()),
+    key="sup_city"
+)
+city_key = None
+if selected_city_name != "All Cities":
+    city_key = [k for k, v in cities_map.items() if v == selected_city_name][0]
 
 col1, col2 = st.columns([1, 1.5])
 
@@ -55,6 +61,8 @@ with col1:
             ),
             use_container_width=True,
         )
+    else:
+        st.warning("⚠️ No host concentration data available for the selected market.")
 
 with col2:
     st.subheader("Seasonal Yield Curves & Forward Demand")
@@ -91,3 +99,5 @@ with col2:
         )
 
         st.altair_chart(chart, use_container_width=True)
+    else:
+        st.warning("⚠️ No forward calendar demand data available for the selected market. Run the calendar ingest/model pipelines to generate predictions.")

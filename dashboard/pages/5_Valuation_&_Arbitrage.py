@@ -2,7 +2,7 @@
 
 import streamlit as st
 
-from src.platform.data_engineering.storage.data_client import (
+from dashboard.backend.data_service import (
     fetch_available_cities,
     fetch_valuation_arbitrage,
 )
@@ -16,9 +16,15 @@ Identify intrinsic value discrepancies and arbitrage opportunities across the ma
 
 # Global Filters
 st.sidebar.header("Filters")
-cities = ["All Cities"] + fetch_available_cities()
-selected_city = st.sidebar.selectbox("Select Market", cities, key="val_city")
-city_key = None if selected_city == "All Cities" else selected_city
+cities_map = fetch_available_cities()
+selected_city_name = st.sidebar.selectbox(
+    "Select Market",
+    options=["All Cities"] + list(cities_map.values()),
+    key="val_city"
+)
+city_key = None
+if selected_city_name != "All Cities":
+    city_key = [k for k, v in cities_map.items() if v == selected_city_name][0]
 
 st.subheader("The 'Undervalued' Index")
 st.info(

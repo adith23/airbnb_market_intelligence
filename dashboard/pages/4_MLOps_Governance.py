@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from dashboard.config import MODELS_DIR
-from src.platform.mlops.serving.ml_client import LATEST_RUN
+from dashboard.backend.ml_service import LATEST_RUN
 
 st.set_page_config(page_title="MLOps & Governance", page_icon="⚖️", layout="wide")
 st.title("⚖️ Engineering View: MLOps Governance")

@@ -17,7 +17,7 @@ from dashboard.components.charts import (
 )
 from dashboard.components.kpi_cards import render_kpi_row
 from dashboard.components.map_renderer import render_pricing_heatmap
-from src.platform.data_engineering.storage.data_client import (
+from dashboard.backend.data_service import (
     fetch_available_cities,
     fetch_executive_kpis,
     fetch_geospatial_data,
@@ -31,11 +31,16 @@ st.title("🏠 Market Overview & Geospatial Intelligence")
 
 # Global Filters
 st.sidebar.header("Filters")
-cities = ["All Cities"] + fetch_available_cities()
-selected_city = st.sidebar.selectbox("Select Market", cities)
+cities_map = fetch_available_cities()
+selected_city_name = st.sidebar.selectbox(
+    "Select Market",
+    options=["All Cities"] + list(cities_map.values()),
+)
 
 # Determine query key
-city_key = None if selected_city == "All Cities" else selected_city
+city_key = None
+if selected_city_name != "All Cities":
+    city_key = [k for k, v in cities_map.items() if v == selected_city_name][0]
 
 # Load Data
 with st.spinner("Fetching market data (this queries millions of rows via DuckDB)..."):

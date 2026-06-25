@@ -3,7 +3,7 @@
 import altair as alt
 import streamlit as st
 
-from src.platform.data_engineering.storage.data_client import (
+from dashboard.backend.data_service import (
     fetch_available_cities,
     fetch_intervention_radar,
     fetch_neighbourhood_interventions,
@@ -19,9 +19,15 @@ It continuously scores listings and neighbourhoods on actionable business dimens
 
 # Global Filters
 st.sidebar.header("Filters")
-cities = ["All Cities"] + fetch_available_cities()
-selected_city = st.sidebar.selectbox("Select Market", cities, key="radar_city")
-city_key = None if selected_city == "All Cities" else selected_city
+cities_map = fetch_available_cities()
+selected_city_name = st.sidebar.selectbox(
+    "Select Market",
+    options=["All Cities"] + list(cities_map.values()),
+    key="radar_city"
+)
+city_key = None
+if selected_city_name != "All Cities":
+    city_key = [k for k, v in cities_map.items() if v == selected_city_name][0]
 
 st.divider()
 
