@@ -1,5 +1,5 @@
 # Use a slim Python image
-FROM python:3.10-slim
+FROM python:3.12-slim   
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -21,5 +21,4 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy the entire application code
 COPY . .
 
-# The entrypoint will be overridden by the KubernetesPodOperator
 CMD ["python", "main.py"]

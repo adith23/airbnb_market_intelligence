@@ -25,7 +25,7 @@ services:
   dashboard:
     build:
       context: .
-      dockerfile: dashboard/Dockerfile
+      dockerfile: dashboard.Dockerfile
     image: airbnb-market-intelligence-dashboard:latest
     container_name: airbnb-dashboard
     environment:

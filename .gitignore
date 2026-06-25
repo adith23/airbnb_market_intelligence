@@ -1,4 +1,4 @@
-# Data files (never commit raw data or pipeline outputs)
+# Data files
 data/
 outputs/
 *.csv

@@ -1,0 +1,89 @@
+name: Continuous Deployment (CD)
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: "read"
+  id-token: "write"
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+  DASHBOARD_IMAGE: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/airbnb-app-repo-prod/dashboard
+  PIPELINE_IMAGE: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/airbnb-ml-models-prod/pipeline
+
+jobs:
+  build_and_deploy:
+    name: "Build and Deploy to GCP"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to GCP via Workload Identity
+        id: "auth"
+        uses: "google-github-actions/auth@v2"
+        with:
+          project_id: "${{ secrets.GCP_PROJECT_ID }}"
+          workload_identity_provider: "projects/605975162766/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider"
+          service_account: "605975162766-compute@developer.gserviceaccount.com"
+
+      - name: Set up Cloud SDK
+        uses: "google-github-actions/setup-gcloud@v2"
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
+
+      # Set up Docker Buildx for advanced caching
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and Push Dashboard Image
+      - name: Build & Push Dashboard Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: dashboard.Dockerfile
+          push: true
+          tags: |
+            ${{ env.DASHBOARD_IMAGE }}:latest
+            ${{ env.DASHBOARD_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build and Push Pipeline Image
+      - name: Build & Push Pipeline Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: pipeline.Dockerfile
+          push: true
+          tags: |
+            ${{ env.PIPELINE_IMAGE }}:latest
+            ${{ env.PIPELINE_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Deploy Dashboard to Cloud Run & Update Cloud Run Jobs using SHA tags
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy airbnb-dashboard-prod \
+            --image ${{ env.DASHBOARD_IMAGE }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --quiet
+            
+          gcloud run jobs update airbnb-data-pipeline-prod \
+            --image ${{ env.PIPELINE_IMAGE }}:${{ github.sha }} \
+            --command "python,main.py,run-pipeline-all" \
+            --region ${{ env.REGION }} \
+            --quiet
+            
+          gcloud run jobs update airbnb-ml-pipeline-prod \
+            --image ${{ env.PIPELINE_IMAGE }}:${{ github.sha }} \
+            --command "python,main.py,run-ml" \
+            --region ${{ env.REGION }} \
+            --quiet
