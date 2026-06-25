@@ -52,7 +52,7 @@ def render_pricing_heatmap(df: pd.DataFrame):
         layers=[layer],
         initial_view_state=view_state,
         tooltip=tooltip,
-        map_style="mapbox://styles/mapbox/dark-v10",
+        map_style="dark",
     )
 
     st.pydeck_chart(r)

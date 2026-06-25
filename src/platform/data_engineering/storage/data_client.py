@@ -7,7 +7,6 @@ import streamlit as st
 from dashboard.config import DB_PATH
 
 
-@st.cache_resource
 def get_db_connection() -> duckdb.DuckDBPyConnection:
     """Initialize a read-only DuckDB connection."""
     return duckdb.connect(DB_PATH, read_only=True)
@@ -37,7 +36,9 @@ def fetch_executive_kpis(city_key: str | None = None) -> dict:
 
 
 @st.cache_data(ttl=3600)
-def fetch_geospatial_data(city_key: str | None = None, limit: int = 50000) -> pd.DataFrame:
+def fetch_geospatial_data(
+    city_key: str | None = None, limit: int = 50000
+) -> pd.DataFrame:
     """Fetch coordinates and prices for PyDeck map rendering."""
     conn = get_db_connection()
     where_clause = f"WHERE city_key = '{city_key}'" if city_key else ""
