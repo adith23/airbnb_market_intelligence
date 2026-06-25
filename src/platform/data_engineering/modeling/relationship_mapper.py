@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -336,7 +336,7 @@ def generate_relationship_report(city_name: str) -> dict[str, Any]:
     # Build report
     report = {
         "city": city_name,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "files_loaded": list(dataframes.keys()),
         "primary_key_validation": pk_results,
         "foreign_key_validation": fk_results,

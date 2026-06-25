@@ -23,7 +23,7 @@ import json
 import logging
 import math
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -52,7 +52,7 @@ class FeatureSet:
     listing_ids: pd.Series
     metadata_columns: pd.DataFrame
     config_snapshot: dict
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     @property
     def n_samples(self) -> int:
@@ -96,7 +96,9 @@ def load_ml_config(config_path: str | Path | None = None) -> dict[str, Any]:
         ValueError: If required keys are missing.
     """
     if config_path is None:
-        config_path = Path(__file__).resolve().parent.parent.parent.parent / "config" / "ml_config.yaml"
+        config_path = (
+            Path(__file__).resolve().parent.parent.parent.parent / "config" / "ml_config.yaml"
+        )
     else:
         config_path = Path(config_path)
 

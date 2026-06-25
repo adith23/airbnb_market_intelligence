@@ -49,8 +49,9 @@ def load_models():
     try:
         q_low = joblib.load(model_path / "q_0.10.joblib")
         q_high = joblib.load(model_path / "q_0.90.joblib")
-    except FileNotFoundError:
+    except (FileNotFoundError, ImportError):
         q_low, q_high = None, None
+
 
     with open(model_path / "feature_columns.json") as f:
         features = json.load(f)

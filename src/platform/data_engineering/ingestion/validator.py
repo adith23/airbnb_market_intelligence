@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -538,7 +538,7 @@ def generate_quality_report(city_name: str) -> dict[str, Any]:
     # Build city-level report
     report = {
         "city": city_name,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "files_checked": len(file_reports),
         "file_reports": file_reports,
     }

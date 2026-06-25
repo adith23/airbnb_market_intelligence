@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -631,7 +631,7 @@ def _save_enrichment_report(result: EnrichmentResult) -> Path:
     output_dir = get_output_dir("enrichment")
     output_path = output_dir / f"{result.city}_enrichment_report.json"
     report = asdict(result)
-    report["enriched_at"] = datetime.now(timezone.utc).isoformat()
+    report["enriched_at"] = datetime.now(UTC).isoformat()
 
     with open(output_path, "w", encoding="utf-8") as fh:
         json.dump(report, fh, indent=2, default=str)

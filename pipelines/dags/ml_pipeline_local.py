@@ -18,10 +18,10 @@ from typing import Any
 
 from src.platform.common.metadata import complete_run, fail_run, start_run
 from src.platform.common.utils import get_db_path
-from src.platform.data_science.validation.bias_auditor import run_bias_audit
-from src.platform.data_science.validation.evaluator import evaluate_experiment
 from src.platform.data_science.explainability.explainer import explain_model
 from src.platform.data_science.training.trainer import train_experiment
+from src.platform.data_science.validation.bias_auditor import run_bias_audit
+from src.platform.data_science.validation.evaluator import evaluate_experiment
 from src.platform.feature_engineering.feature_store import (
     build_feature_matrix,
     load_ml_config,

@@ -1,40 +1,30 @@
-# =====================================================================
-# ML Pipeline Configuration — §6.1 Price Prediction + §6.4 Bias Audit
+# ML Pipeline Configuration — Price Prediction + Bias Audit
 #
 # Consumed by pipeline/ml/ modules.
 # Mirrors the config-driven pattern of cleaning_rules.yaml and
 # enrichment_config.yaml.
-# =====================================================================
 
-# -----------------------------------------------------------------
 # Target variable
-# -----------------------------------------------------------------
 target:
   column: price_usd
-  transform: log1p # log1p(price_usd) for training
-  inverse_transform: expm1 # expm1() to recover original scale
+  transform: log1p
+  inverse_transform: expm1
 
-# -----------------------------------------------------------------
 # Train / test split
-# -----------------------------------------------------------------
 split:
   test_size: 0.20
   stratify_by:
     - city
-    - price_quintile # computed at runtime
+    - price_quintile
   random_state: 42
 
-# -----------------------------------------------------------------
 # Cross-validation
-# -----------------------------------------------------------------
 cross_validation:
   n_folds: 5
   strategy: stratified # StratifiedKFold on strat_group
   random_state: 42
 
-# -----------------------------------------------------------------
 # Feature definitions
-# -----------------------------------------------------------------
 features:
   numeric:
     - accommodates
@@ -117,18 +107,14 @@ features:
   # One-hot encoding cardinality cap (rare categories → __OTHER__)
   max_cardinality: 20
 
-# -----------------------------------------------------------------
 # Missing value strategies
-# -----------------------------------------------------------------
 missing_values:
   numeric: median
   boolean: false
   categorical: "__MISSING__"
-  add_indicators: true # create is_missing_X flag columns
+  add_indicators: true
 
-# -----------------------------------------------------------------
 # Model families
-# -----------------------------------------------------------------
 models:
   ridge:
     enabled: true
@@ -182,17 +168,13 @@ models:
       random_state: 42
       verbosity: -1
 
-# -----------------------------------------------------------------
 # Quantile regression (prediction intervals)
-# -----------------------------------------------------------------
 quantile_regression:
   enabled: true
   quantiles: [0.10, 0.90]
-  model: lightgbm # LightGBM supports native quantile loss
+  model: lightgbm
 
-# -----------------------------------------------------------------
-# Evaluation metrics
-# -----------------------------------------------------------------
+# Evaluation metrics      
 evaluation:
   primary_metric: mae
   metrics:
@@ -206,18 +188,14 @@ evaluation:
     mape: 25.0
     r2: 0.55
 
-# -----------------------------------------------------------------
 # SHAP explainability
-# -----------------------------------------------------------------
 explainability:
   shap_sample_size: 5000
   top_features: 20
   local_explanations: 5
   random_state: 42
 
-# -----------------------------------------------------------------
-# Bias audit (§6.4)
-# -----------------------------------------------------------------
+# Bias audit
 bias_audit:
   dimensions:
     - column: city

@@ -1,4 +1,4 @@
-# Airbnb Market Intelligence
+# Airbnb Market Intelligence Pipeline
 
 > End-to-end market intelligence platform for Inside Airbnb data — from raw CSV ingestion
 > through a Medallion data architecture, a DuckDB star-schema warehouse, XGBoost price
@@ -106,8 +106,8 @@ If running locally, ensure you have completed the [Prerequisites](#prerequisites
 ┌───────────────────────────────────────────────────────────────────────┐
 │                    DATA ENGINEERING PIPELINE (§2–3)                   │
 │                                                                       │
-│  Inside Airbnb ──► Download  ──► Profile & QA ──► Clean  ──► Enrich  │
-│  (CSV / GZ)        §2.3/§3.1     §3.1            §3.2      §3.3      │
+│  Inside Airbnb ──► Download  ──► Profile & QA ──► Clean  ──► Enrich   │
+│  (CSV / GZ)        §2.3/§3.1     §3.1            §3.2      §3.3       │
 │                                                                       │
 │  data/raw/{city}/     outputs/profiles/     data/staging/{city}/      │
 │    [Bronze]            outputs/quality/       [Silver]                │
@@ -115,12 +115,12 @@ If running locally, ensure you have completed the [Prerequisites](#prerequisites
 │                                             data/enriched/            │
 │                                               [Gold]                  │
 │                                                    │                  │
-│                                     ┌──────────────▼──────────────┐  │
-│                                     │  DuckDB Star Schema         │  │
-│                                     │  data/airbnb.duckdb         │  │
-│                                     │  [Platinum]                 │  │
-│                                     └──────────┬──────────────────┘  │
-└────────────────────────────────────────────────┼────────────────────-┘
+│                                     ┌──────────────▼──────────────┐   │
+│                                     │  DuckDB Star Schema         │   │
+│                                     │  data/airbnb.duckdb         │   │
+│                                     │  [Platinum]                 │   │
+│                                     └──────────┬──────────────────┘   │
+└────────────────────────────────────────────────┼────────────────────--┘
                                                  │
            ┌─────────────────────────────────────┤
            │  feature_store.py                   │  data_client.py

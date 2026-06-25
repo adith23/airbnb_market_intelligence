@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -371,7 +371,7 @@ def document_harmonization_strategy(
     }
 
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "cities": schema_comparison.get("cities_compared", []),
         "strategies": strategies,
     }
@@ -435,7 +435,7 @@ def generate_harmonization_report(city_names: list[str]) -> dict[str, Any]:
     # Build complete report
     report = {
         "type": "harmonization_report",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "cities": city_names,
         "schema_comparison": schema_comparison,
         "metadata_comparison": metadata_comparison,

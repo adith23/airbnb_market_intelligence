@@ -1,8 +1,7 @@
 """Configuration settings for the Streamlit Dashboard."""
 
-from pathlib import Path
-
 import os
+from pathlib import Path
 
 # Paths
 PROJECT_ROOT = Path(__file__).parent.parent

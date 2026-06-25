@@ -245,9 +245,7 @@ def _create_dim_host(con: duckdb.DuckDBPyConnection) -> None:
             "INTEGER",
             "host_listings_count",
         ),
-        _expr(
-            cols, ["host_total_listings_count"], "INTEGER", "host_total_listings_count"
-        ),
+        _expr(cols, ["host_total_listings_count"], "INTEGER", "host_total_listings_count"),
         _expr(cols, ["host_has_profile_pic"], "BOOLEAN", "host_has_profile_pic"),
         _expr(cols, ["host_identity_verified"], "BOOLEAN", "host_identity_verified"),
         _expr(cols, ["host_verification_count"], "INTEGER", "host_verification_count"),
@@ -515,9 +513,7 @@ def _create_fact_listing_snapshot(con: duckdb.DuckDBPyConnection) -> None:
         _expr(cols, ["number_of_reviews_ltm"], "INTEGER", "number_of_reviews_ltm"),
         _expr(cols, ["review_scores_rating"], "DOUBLE", "review_scores_rating"),
         _expr(cols, ["review_scores_accuracy"], "DOUBLE", "review_scores_accuracy"),
-        _expr(
-            cols, ["review_scores_cleanliness"], "DOUBLE", "review_scores_cleanliness"
-        ),
+        _expr(cols, ["review_scores_cleanliness"], "DOUBLE", "review_scores_cleanliness"),
         _expr(cols, ["review_scores_checkin"], "DOUBLE", "review_scores_checkin"),
         _expr(
             cols,
@@ -534,9 +530,7 @@ def _create_fact_listing_snapshot(con: duckdb.DuckDBPyConnection) -> None:
         _expr(cols, ["availability_365"], "INTEGER", "availability_365"),
         _expr(cols, ["occupancy_rate_pct"], "DOUBLE", "occupancy_rate_pct"),
         _expr(cols, ["estimated_annual_revenue"], "DOUBLE", "estimated_annual_revenue"),
-        _expr(
-            cols, ["estimated_monthly_revenue"], "DOUBLE", "estimated_monthly_revenue"
-        ),
+        _expr(cols, ["estimated_monthly_revenue"], "DOUBLE", "estimated_monthly_revenue"),
         _expr(cols, ["avg_booked_price"], "DOUBLE", "avg_booked_price"),
         _expr(cols, ["price_per_bedroom"], "DOUBLE", "price_per_bedroom"),
         _expr(cols, ["price_per_person"], "DOUBLE", "price_per_person"),
@@ -667,12 +661,12 @@ def _create_fact_review(con: duckdb.DuckDBPyConnection) -> None:
     review_id = (
         "TRY_CAST(r.review_id AS BIGINT)"
         if "review_id" in cols
-        else "TRY_CAST(r.id AS BIGINT)" if "id" in cols else "CAST(NULL AS BIGINT)"
+        else "TRY_CAST(r.id AS BIGINT)"
+        if "id" in cols
+        else "CAST(NULL AS BIGINT)"
     )
     reviewer_id = (
-        "TRY_CAST(r.reviewer_id AS BIGINT)"
-        if "reviewer_id" in cols
-        else "CAST(NULL AS BIGINT)"
+        "TRY_CAST(r.reviewer_id AS BIGINT)" if "reviewer_id" in cols else "CAST(NULL AS BIGINT)"
     )
     comments = "length(r.comments)" if "comments" in cols else "CAST(NULL AS INTEGER)"
     con.execute(
@@ -707,10 +701,7 @@ def _table_counts(con: duckdb.DuckDBPyConnection) -> dict[str, int]:
         "fact_calendar",
         "fact_review",
     ]
-    return {
-        table: con.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
-        for table in tables
-    }
+    return {table: con.execute(f"SELECT count(*) FROM {table}").fetchone()[0] for table in tables}
 
 
 def build_star_schema(
@@ -725,12 +716,8 @@ def build_star_schema(
 
     city_names = [city.strip() for city in city_names if city.strip()]
     master_paths = _stage_required_enriched(city_names)
-    calendar_paths = (
-        _existing_staging_files(city_names, "calendar") if include_calendar else []
-    )
-    review_paths = (
-        _existing_staging_files(city_names, "reviews") if include_reviews else []
-    )
+    calendar_paths = _existing_staging_files(city_names, "calendar") if include_calendar else []
+    review_paths = _existing_staging_files(city_names, "reviews") if include_reviews else []
 
     warnings: list[str] = []
     if include_calendar and not calendar_paths:
@@ -741,9 +728,7 @@ def build_star_schema(
     con = get_connection(db_path)
     try:
         _create_parquet_view(con, "stg_master", master_paths)
-        _create_parquet_view(
-            con, "stg_calendar", calendar_paths, add_city_from_path=True
-        )
+        _create_parquet_view(con, "stg_calendar", calendar_paths, add_city_from_path=True)
         _create_parquet_view(con, "stg_reviews", review_paths, add_city_from_path=True)
 
         _create_dim_city(con, city_names)
@@ -770,9 +755,7 @@ def build_star_schema(
 
 def _parse_named_queries(sql_text: str) -> dict[str, str]:
     """Parse ``-- name: query_name`` blocks from analytical_queries.sql."""
-    matches = list(
-        re.finditer(r"^--\s*name:\s*([a-zA-Z0-9_]+)\s*$", sql_text, flags=re.MULTILINE)
-    )
+    matches = list(re.finditer(r"^--\s*name:\s*([a-zA-Z0-9_]+)\s*$", sql_text, flags=re.MULTILINE))
     queries: dict[str, str] = {}
     for idx, match in enumerate(matches):
         name = match.group(1)
@@ -807,9 +790,7 @@ def run_analytical_queries(
             return {"custom": _fetch_dicts(con, sql)}
 
         query_path = (
-            Path(__file__).resolve().parent.parent.parent.parent
-            / "sql"
-            / "analytical_queries.sql"
+            Path(__file__).resolve().parent.parent.parent.parent / "sql" / "analytical_queries.sql"
         )
         queries = _parse_named_queries(query_path.read_text(encoding="utf-8"))
         if query_name not in queries:

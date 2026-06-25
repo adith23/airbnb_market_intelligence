@@ -255,13 +255,13 @@ def explore(city: str, skip_download: bool) -> None:
         download_city,
         verify_downloads,
     )
+    from src.platform.data_engineering.ingestion.profiler import profile_city
     from src.platform.data_engineering.ingestion.validator import (
         generate_quality_report,
     )
     from src.platform.data_engineering.modeling.relationship_mapper import (
         generate_relationship_report,
     )
-    from src.platform.data_engineering.ingestion.profiler import profile_city
 
     click.echo(f"🚀 Running full exploration pipeline for: {city}")
     click.echo("=" * 60)
@@ -307,6 +307,7 @@ def explore_all(skip_download: bool) -> None:
         download_city,
         verify_downloads,
     )
+    from src.platform.data_engineering.ingestion.profiler import profile_city
     from src.platform.data_engineering.ingestion.validator import (
         generate_quality_report,
     )
@@ -316,7 +317,6 @@ def explore_all(skip_download: bool) -> None:
     from src.platform.data_engineering.modeling.relationship_mapper import (
         generate_relationship_report,
     )
-    from src.platform.data_engineering.ingestion.profiler import profile_city
 
     all_cities = load_city_config()
     city_names = list(all_cities.keys())
@@ -742,10 +742,10 @@ def train(config: str, force: bool) -> None:
 def evaluate(experiment_id: str, config: str) -> None:
     """§6.1: Evaluate models on the held-out test set."""
     from src.platform.common.utils import get_db_path
-    from src.platform.data_science.validation.evaluator import evaluate_experiment
     from src.platform.data_science.training.trainer import (
         load_experiment,
     )
+    from src.platform.data_science.validation.evaluator import evaluate_experiment
     from src.platform.feature_engineering.feature_store import (
         build_feature_matrix,
         load_ml_config,
@@ -827,8 +827,8 @@ def explain(experiment_id: str, config: str) -> None:
 def bias_audit(experiment_id: str, config: str) -> None:
     """§6.4: Run model generalization & bias analysis."""
     from src.platform.common.utils import get_db_path
-    from src.platform.data_science.validation.bias_auditor import run_bias_audit
     from src.platform.data_science.training.trainer import load_experiment
+    from src.platform.data_science.validation.bias_auditor import run_bias_audit
     from src.platform.feature_engineering.feature_store import (
         build_feature_matrix,
         load_ml_config,

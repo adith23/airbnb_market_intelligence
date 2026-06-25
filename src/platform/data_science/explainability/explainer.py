@@ -163,10 +163,7 @@ def compute_shap_values(
         shap_array = np.asarray(shap_values_obj)
 
     # Safely extract expected value
-    if (
-        hasattr(shap_values_obj, "base_values")
-        and shap_values_obj.base_values is not None
-    ):
+    if hasattr(shap_values_obj, "base_values") and shap_values_obj.base_values is not None:
         expected_value = float(np.mean(shap_values_obj.base_values))
     elif hasattr(explainer, "expected_value") and explainer.expected_value is not None:
         expected_value = _safe_float(
@@ -247,7 +244,7 @@ def _safe_float(val: Any) -> float:
             val = val.strip("[]'\" ")
 
         return float(val)
-    except Exception as e:
+    except Exception:
         return 0.0
 
 
@@ -364,9 +361,7 @@ def per_city_importance(
     results = {}
 
     if city_column not in meta_sample.columns:
-        logger.warning(
-            "City column '%s' not in metadata — skipping per-city analysis", city_column
-        )
+        logger.warning("City column '%s' not in metadata — skipping per-city analysis", city_column)
         return results
 
     for city in meta_sample[city_column].unique():
@@ -539,16 +534,12 @@ def explain_model(
     # Match y_test to the subsample indices
     sample_indices = X_sample.index
     y_true_sample = (
-        split.y_test.loc[sample_indices].values
-        if hasattr(split.y_test, "loc")
-        else None
+        split.y_test.loc[sample_indices].values if hasattr(split.y_test, "loc") else None
     )
 
     # Match metadata to the subsample
     meta_sample = (
-        split.meta_test.loc[sample_indices]
-        if hasattr(split.meta_test, "loc")
-        else split.meta_test
+        split.meta_test.loc[sample_indices] if hasattr(split.meta_test, "loc") else split.meta_test
     )
 
     # Global importance
@@ -576,9 +567,7 @@ def explain_model(
         shap_path_file = output_dir / "shap_values.parquet"
         import polars as pl
 
-        shap_pl = pl.DataFrame(
-            {col: shap_vals[:, i] for i, col in enumerate(X_sample.columns)}
-        )
+        shap_pl = pl.DataFrame({col: shap_vals[:, i] for i, col in enumerate(X_sample.columns)})
         shap_pl.write_parquet(shap_path_file)
         shap_path = str(shap_path_file)
     except Exception as exc:

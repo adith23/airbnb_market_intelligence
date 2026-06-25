@@ -7,9 +7,9 @@
 #
 # Consumed by pipeline/cleaner.py
 
-# =====================================================================
+
+
 # Listings cleaning configuration
-# =====================================================================
 listings:
   # Columns containing price strings ("$1,250.00") → Float64
   price_columns:
@@ -98,9 +98,7 @@ listings:
       - { check: not_null }
       - { check: enum, values: ["Entire home/apt", "Private room", "Shared room", "Hotel room"] }
 
-# =====================================================================
 # Calendar cleaning configuration
-# =====================================================================
 calendar:
   price_columns:
     - price
@@ -132,9 +130,7 @@ calendar:
     date:
       - { check: not_null }
 
-# =====================================================================
 # Reviews cleaning configuration
-# =====================================================================
 reviews:
   price_columns: []
 
@@ -163,9 +159,7 @@ reviews:
     date:
       - { check: not_null }
 
-# =====================================================================
 # Neighbourhoods cleaning configuration
-# =====================================================================
 neighbourhoods:
   price_columns: []
   boolean_columns: []

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -107,7 +107,7 @@ def infer_schema(filepath: str | Path) -> dict[str, Any]:
         "row_count": row_count,
         "column_count": col_count,
         "schema_hash": compute_schema_hash(df.columns),
-        "profiled_at": datetime.now(timezone.utc).isoformat(),
+        "profiled_at": datetime.now(UTC).isoformat(),
         "columns": columns,
     }
 
@@ -731,7 +731,7 @@ def generate_data_quality_report(city_name: str) -> dict[str, Any]:
 
     report = {
         "city": city_name,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "executive_summary": {
             "total_files": len(file_reports),
             "total_rows": total_rows,

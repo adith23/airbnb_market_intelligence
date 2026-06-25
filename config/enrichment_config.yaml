@@ -1,26 +1,17 @@
-# Enrichment configuration for Section 3.3
+# Enrichment configuration
 #
 # Defines join specifications, derived field formulas,
 # currency conversion rates, and aggregation parameters.
 #
 # Consumed by pipeline/enricher.py
 
-# =====================================================================
 # Calendar aggregation parameters
-# =====================================================================
 calendar_aggregation:
-  # Inside Airbnb reports available=False for BOTH actual bookings
-  # and host-blocked dates. The occupancy rate computed from this
-  # is an UPPER BOUND on true occupancy.
   occupancy_interpretation: "upper_bound"
-
-  # Revenue estimation uses asking price on booked (unavailable) days.
-  # Actual booking prices are not available in the public dataset.
   revenue_note: "Estimated from asking price on unavailable days"
 
-# =====================================================================
+
 # Derived (calculated) fields
-# =====================================================================
 derived_fields:
   host_tenure_years:
     description: "Years the host has been on the platform"
@@ -62,27 +53,17 @@ derived_fields:
     formula: "price / neighbourhood_median_price"
     null_when: "neighbourhood_median_price is NULL or 0"
 
-# =====================================================================
 # Currency exchange rates (to USD)
-# =====================================================================
-# Used for cross-city price normalization in build_unified_master().
-# Source: approximate rates — should be updated for production use.
 exchange_rates_to_usd:
   USD: 1.00
   EUR: 1.08
   GBP: 1.27
 
-# =====================================================================
 # Active listing criteria
-# =====================================================================
 active_listing:
-  # A listing is considered "active" if it had a review in the last N months
   review_recency_months: 12
-  # OR has future availability > 0 days in the next 365
   min_availability_365: 1
 
-# =====================================================================
 # Professional host threshold
-# =====================================================================
 professional_host:
   min_listings: 3
