@@ -8,8 +8,36 @@ import streamlit as st
 
 from dashboard.config import MODELS_DIR
 
-# Using the latest model run directory
-LATEST_RUN = "20260623_025238_9d636ad3"
+# Dynamic resolution of the latest model run directory
+def get_latest_run() -> str:
+    """Retrieve the run ID dynamically. Checks environment override first, then does auto-discovery."""
+    import os
+
+    # Allow manual override via environment variable
+    env_override = os.environ.get("LATEST_RUN")
+    if env_override:
+        return env_override
+
+    # Auto-discover the latest model folder by timestamp name
+    try:
+        if MODELS_DIR.exists():
+            subdirs = [
+                d for d in MODELS_DIR.iterdir()
+                if d.is_dir() and (d / "xgboost.joblib").exists()
+            ]
+            if subdirs:
+                # Alphanumeric sort works chronologically since names start with YYYYMMDD_HHMMSS
+                latest_dir = max(subdirs, key=lambda x: x.name)
+                return latest_dir.name
+    except Exception:
+        pass
+
+    # Safe fallback default ID
+    return "20260623_025238_9d636ad3"
+
+
+LATEST_RUN = get_latest_run()
+
 
 
 @st.cache_resource
