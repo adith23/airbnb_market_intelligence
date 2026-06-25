@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  # ETL and Machine Learning Pipeline service
+  pipeline:
+    build:
+      context: .
+      dockerfile: pipeline.Dockerfile
+    image: airbnb-market-intelligence-pipeline:latest
+    container_name: airbnb-pipeline
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=local
+    volumes:
+      # Bind mount data, outputs, and config directories for persistence and sharing
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ./config:/app/config
+    # Run the end-to-end data pipeline first, followed by the machine learning pipeline
+    command: >
+      sh -c "python main.py run-pipeline-all --skip-download && python main.py run-ml"
+
+  # Streamlit Dashboard service
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    image: airbnb-market-intelligence-dashboard:latest
+    container_name: airbnb-dashboard
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=local
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ./config:/app/config
+    # Ensure the dashboard starts after the ETL/ML pipeline completes successfully
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
