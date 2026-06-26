@@ -1,4 +1,4 @@
-# Notebook dependencies for EDA (§4) and Statistical Analysis (§5)
+# Notebook dependencies for EDA and Statistical Analysis
 #
 # Install alongside the main project requirements:
 #   pip install -r notebooks/requirements-notebooks.txt
@@ -12,7 +12,7 @@ plotly>=5.18.0
 folium>=0.15.0
 branca>=0.7.0
 
-# Statistical analysis (§5)
+# Statistical analysis
 scipy>=1.12.0
 statsmodels>=0.14.0
 scikit-learn>=1.4.0

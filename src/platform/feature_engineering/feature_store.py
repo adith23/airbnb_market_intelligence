@@ -37,11 +37,7 @@ from src.platform.common.utils import get_db_path
 logger = logging.getLogger(__name__)
 
 
-# ===================================================================
 # Data Classes
-# ===================================================================
-
-
 @dataclass
 class FeatureSet:
     """Immutable container for a feature matrix and its metadata."""
@@ -77,11 +73,7 @@ class TrainTestSplit:
     test_indices: np.ndarray
 
 
-# ===================================================================
 # Configuration Loading
-# ===================================================================
-
-
 def load_ml_config(config_path: str | Path | None = None) -> dict[str, Any]:
     """Load and validate the ML pipeline configuration.
 
@@ -97,7 +89,9 @@ def load_ml_config(config_path: str | Path | None = None) -> dict[str, Any]:
     """
     if config_path is None:
         config_path = (
-            Path(__file__).resolve().parent.parent.parent.parent / "config" / "ml_config.yaml"
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "config"
+            / "ml_config.yaml"
         )
     else:
         config_path = Path(config_path)
@@ -128,10 +122,7 @@ def _validate_config(config: dict) -> None:
             raise ValueError(f"ML config features must specify '{key}'")
 
 
-# ===================================================================
 # Data Loading
-# ===================================================================
-
 _FEATURE_QUERY = """
     SELECT
         f.listing_id,
@@ -199,7 +190,9 @@ def load_raw_data(db_path: str | Path | None = None) -> pd.DataFrame:
 
     db_path = Path(db_path)
     if not db_path.exists():
-        raise FileNotFoundError(f"DuckDB file not found: {db_path}. Run the data pipeline first.")
+        raise FileNotFoundError(
+            f"DuckDB file not found: {db_path}. Run the data pipeline first."
+        )
 
     con = duckdb.connect(str(db_path), read_only=True)
     try:
@@ -211,11 +204,7 @@ def load_raw_data(db_path: str | Path | None = None) -> pd.DataFrame:
     return df
 
 
-# ===================================================================
 # Amenity Flag Extraction
-# ===================================================================
-
-
 def extract_amenity_flags(
     amenities_series: pd.Series,
     keyword_map: dict[str, list[str]],
@@ -232,7 +221,9 @@ def extract_amenity_flags(
     Returns:
         DataFrame with one boolean column per flag.
     """
-    results = {flag: np.zeros(len(amenities_series), dtype=np.int8) for flag in keyword_map}
+    results = {
+        flag: np.zeros(len(amenities_series), dtype=np.int8) for flag in keyword_map
+    }
 
     for idx, raw in enumerate(amenities_series):
         if pd.isna(raw) or not raw:
@@ -257,18 +248,17 @@ def extract_amenity_flags(
     return df
 
 
-# ===================================================================
 # Distance Features
-# ===================================================================
-
-
 def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Haversine distance between two points in kilometres."""
     R = 6371.0
     lat1_r, lat2_r = math.radians(lat1), math.radians(lat2)
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat / 2) ** 2 + math.cos(lat1_r) * math.cos(lat2_r) * math.sin(dlon / 2) ** 2
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(lat1_r) * math.cos(lat2_r) * math.sin(dlon / 2) ** 2
+    )
     return R * 2 * math.asin(math.sqrt(a))
 
 
@@ -334,11 +324,7 @@ def compute_distance_to_centre_vectorised(
     return distances
 
 
-# ===================================================================
 # Interaction Terms
-# ===================================================================
-
-
 def create_interaction_terms(
     df: pd.DataFrame,
     interactions: list[list[str]],
@@ -369,11 +355,7 @@ def create_interaction_terms(
     return result
 
 
-# ===================================================================
 # Missing Value Handling
-# ===================================================================
-
-
 def handle_missing_values(
     df: pd.DataFrame,
     config: dict,
@@ -427,11 +409,7 @@ def handle_missing_values(
     return result, indicators
 
 
-# ===================================================================
 # Categorical Encoding
-# ===================================================================
-
-
 def encode_categoricals(
     df: pd.DataFrame,
     columns: list[str],
@@ -472,11 +450,7 @@ def encode_categoricals(
     return result
 
 
-# ===================================================================
 # Winsorisation
-# ===================================================================
-
-
 def winsorise(series: pd.Series, lower: float = 0.01, upper: float = 0.99) -> pd.Series:
     """Clip values at the given quantile bounds.
 
@@ -493,11 +467,7 @@ def winsorise(series: pd.Series, lower: float = 0.01, upper: float = 0.99) -> pd
     return series.clip(lower=lo, upper=hi)
 
 
-# ===================================================================
 # Main Entry Point
-# ===================================================================
-
-
 def build_feature_matrix(
     config: dict[str, Any],
     db_path: str | Path | None = None,
@@ -522,11 +492,11 @@ def build_feature_matrix(
     """
     logger.info("Building feature matrix...")
 
-    # Step 1: Load raw data
+    # Load raw data
     raw_df = load_raw_data(db_path)
     target_col = config["target"]["column"]
 
-    # Step 2: Winsorise target (remove extreme outliers)
+    # Winsorise target (remove extreme outliers)
     raw_df = raw_df[raw_df[target_col] > 0].copy()
     p99 = raw_df[target_col].quantile(0.99)
     raw_df = raw_df[raw_df[target_col] <= p99].copy()
@@ -563,24 +533,28 @@ def build_feature_matrix(
 
     feat_cfg = config["features"]
 
-    # Step 3: Amenity flags
+    # Amenity flags
     amenity_flags_df = pd.DataFrame(index=raw_df.index)
     amenity_map = feat_cfg.get("amenity_flags", {})
     if amenity_map and "amenities" in raw_df.columns:
         amenity_flags_df = extract_amenity_flags(raw_df["amenities"], amenity_map)
 
-    # Step 4: Distance to centre
-    distance_series = pd.Series(np.nan, index=raw_df.index, name="distance_to_centre_km")
+    # Distance to centre
+    distance_series = pd.Series(
+        np.nan, index=raw_df.index, name="distance_to_centre_km"
+    )
     city_centres = feat_cfg.get("city_centres", {})
     if city_centres:
         distance_series = compute_distance_to_centre_vectorised(
             raw_df, city_centres, city_column="city_key"
         )
 
-    # Step 5: Start assembling feature DataFrame
+    # Start assembling feature DataFrame
     numeric_cols = [c for c in feat_cfg.get("numeric", []) if c in raw_df.columns]
     boolean_cols = [c for c in feat_cfg.get("boolean", []) if c in raw_df.columns]
-    categorical_cols = [c for c in feat_cfg.get("categorical", []) if c in raw_df.columns]
+    categorical_cols = [
+        c for c in feat_cfg.get("categorical", []) if c in raw_df.columns
+    ]
 
     # Gather numeric + boolean columns from raw
     feature_df = raw_df[numeric_cols + boolean_cols].copy()
@@ -595,26 +569,30 @@ def build_feature_matrix(
     for col in categorical_cols:
         feature_df[col] = raw_df[col]
 
-    # Step 6: Interaction terms
+    # Interaction terms
     interactions = feat_cfg.get("interactions", [])
     if interactions:
         interaction_df = create_interaction_terms(feature_df, interactions)
         feature_df = pd.concat([feature_df, interaction_df], axis=1)
 
-    # Step 7: Handle missing values
+    # Handle missing values
     mv_config = config.get("missing_values", {})
-    all_numeric = numeric_cols + list(amenity_flags_df.columns) + ["distance_to_centre_km"]
+    all_numeric = (
+        numeric_cols + list(amenity_flags_df.columns) + ["distance_to_centre_km"]
+    )
     all_numeric += [c for c in feature_df.columns if "_x_" in c]
 
     feature_df, indicator_cols = handle_missing_values(
         feature_df, mv_config, all_numeric, boolean_cols, categorical_cols
     )
 
-    # Step 8: Encode categoricals
+    # Encode categoricals
     max_card = feat_cfg.get("max_cardinality", 20)
-    feature_df = encode_categoricals(feature_df, categorical_cols, max_cardinality=max_card)
+    feature_df = encode_categoricals(
+        feature_df, categorical_cols, max_cardinality=max_card
+    )
 
-    # Step 9: Remove any excluded columns that leaked through
+    # Remove any excluded columns that leaked through
     exclude = set(feat_cfg.get("exclude", []))
     feature_df = feature_df.drop(
         columns=[c for c in feature_df.columns if c in exclude], errors="ignore"
@@ -645,11 +623,7 @@ def build_feature_matrix(
     )
 
 
-# ===================================================================
 # Train / Test Split
-# ===================================================================
-
-
 def prepare_train_test_split(
     feature_set: FeatureSet,
     config: dict[str, Any],

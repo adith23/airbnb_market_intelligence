@@ -1,4 +1,4 @@
-"""Model generalisation and bias analysis for §6.4.
+"""Model generalisation and bias analysis.
 
 Implements three complementary bias analysis strategies:
   1. Cross-neighbourhood generalisation (Leave-One-Neighbourhood-Group-Out)
@@ -31,11 +31,7 @@ logger = logging.getLogger(__name__)
 OUTPUTS_DIR = OUTPUT_DIR / "ml"
 
 
-# ===================================================================
 # Data Classes
-# ===================================================================
-
-
 @dataclass
 class LONGOResult:
     """Leave-One-Neighbourhood-Group-Out result for a single group."""
@@ -104,11 +100,7 @@ class BiasAuditReport:
     feature_ablation: dict[str, float] | None
 
 
-# ===================================================================
 # Metrics Helper
-# ===================================================================
-
-
 def _compute_regression_metrics(
     y_true: np.ndarray,
     y_pred: np.ndarray,
@@ -140,11 +132,7 @@ def _compute_regression_metrics(
     }
 
 
-# ===================================================================
 # Cross-Neighbourhood Generalisation (LONGO)
-# ===================================================================
-
-
 def cross_neighbourhood_cv(
     model: Any,
     X: pd.DataFrame,
@@ -231,11 +219,8 @@ def cross_neighbourhood_cv(
     return results
 
 
-# ===================================================================
+
 # Cross-City Transfer Learning
-# ===================================================================
-
-
 def cross_city_transfer(
     model: Any,
     X: pd.DataFrame,
@@ -339,11 +324,7 @@ def cross_city_transfer(
     return results
 
 
-# ===================================================================
 # Group-Level Bias Detection
-# ===================================================================
-
-
 def _bootstrap_mean_ci(
     residuals: np.ndarray,
     n_bootstrap: int = 5000,
@@ -471,11 +452,7 @@ def compute_group_bias(
     return results
 
 
-# ===================================================================
 # Feature Ablation
-# ===================================================================
-
-
 def neighbourhood_feature_ablation(
     model: Any,
     X: pd.DataFrame,
@@ -535,11 +512,7 @@ def neighbourhood_feature_ablation(
     return result
 
 
-# ===================================================================
 # Fairness Summary
-# ===================================================================
-
-
 def generate_fairness_summary(
     group_biases: list[GroupBias],
     longo_results: list[LONGOResult],
@@ -648,11 +621,7 @@ def generate_fairness_summary(
     )
 
 
-# ===================================================================
 # Report Saving
-# ===================================================================
-
-
 def save_bias_report(report: BiasAuditReport) -> Path:
     """Save the complete bias audit report as JSON and Markdown."""
     output_dir = OUTPUTS_DIR / report.experiment_id
@@ -806,11 +775,7 @@ def _generate_bias_markdown(report: BiasAuditReport, output_dir: Path) -> None:
         fh.write("\n".join(lines))
 
 
-# ===================================================================
 # Main Entry Point
-# ===================================================================
-
-
 def run_bias_audit(
     experiment_result: Any,
     feature_set: Any,
@@ -847,7 +812,7 @@ def run_bias_audit(
     if best_trained.cv_result:
         baseline_mae = best_trained.cv_result.mean_metrics.get("mae", 0.0)
 
-    # 1. Cross-neighbourhood (LONGO)
+    # Cross-neighbourhood (LONGO)
     longo = cross_neighbourhood_cv(
         best_model,
         feature_set.X,
@@ -857,7 +822,7 @@ def run_bias_audit(
         baseline_mae,
     )
 
-    # 2. Cross-city transfer
+    # Cross-city transfer
     transfer = cross_city_transfer(
         best_model,
         feature_set.X,
@@ -866,7 +831,7 @@ def run_bias_audit(
         config,
     )
 
-    # 3. Group-level bias on test set
+    # Group-level bias on test set
     y_pred_test = best_trained.predict(split.X_test)
     biases = compute_group_bias(
         split.y_test.values,
@@ -875,7 +840,7 @@ def run_bias_audit(
         config,
     )
 
-    # 4. Feature ablation
+    # Feature ablation
     ablation = neighbourhood_feature_ablation(
         best_model,
         feature_set.X,
@@ -883,7 +848,7 @@ def run_bias_audit(
         config,
     )
 
-    # 5. Fairness summary
+    # Fairness summary
     fairness = generate_fairness_summary(biases, longo, transfer)
 
     report = BiasAuditReport(

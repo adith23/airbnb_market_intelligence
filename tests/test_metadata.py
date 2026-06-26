@@ -1,4 +1,4 @@
-"""Tests for Section 3.5 metadata and lineage support."""
+"""Tests metadata and lineage support."""
 
 from __future__ import annotations
 

@@ -10,11 +10,7 @@ from src.platform.data_engineering.ingestion.validator import (
     validate_column,
 )
 
-# ===================================================================
 # Column validation
-# ===================================================================
-
-
 class TestValidateColumn:
     def test_not_null_pass(self):
         series = pl.Series("test", [1, 2, 3])
@@ -74,11 +70,7 @@ class TestValidateColumn:
         assert len(result["violations"]) >= 1
 
 
-# ===================================================================
 # Duplicate detection
-# ===================================================================
-
-
 class TestDetectDuplicates:
     def test_no_duplicates(self):
         df = pl.DataFrame({"id": [1, 2, 3]})
@@ -106,11 +98,7 @@ class TestDetectDuplicates:
         assert result["checked"] is False
 
 
-# ===================================================================
 # Scraping artifact detection
-# ===================================================================
-
-
 class TestDetectScrapingArtifacts:
     def test_no_artifacts(self):
         df = pl.DataFrame({"text": ["clean", "data", "here"]})

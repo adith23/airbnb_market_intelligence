@@ -1,6 +1,6 @@
 """CLI entry point for the Airbnb Market Intelligence pipeline.
 
-Orchestrates all exploration tasks from Section 2.3:
+Orchestrates all exploration tasks:
   - download:  Fetch datasets from Inside Airbnb
   - profile:   Schema discovery and statistical profiling
   - validate:  Data quality checks and constraint validation
@@ -33,11 +33,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 
-# ===================================================================
 # CLI group
-# ===================================================================
-
-
 @click.group()
 @click.option("--verbose", "-v", is_flag=True, help="Enable debug logging.")
 def cli(verbose: bool) -> None:
@@ -47,11 +43,7 @@ def cli(verbose: bool) -> None:
     setup_logging(level=logging.DEBUG if verbose else logging.INFO)
 
 
-# ===================================================================
 # Download command
-# ===================================================================
-
-
 @cli.command()
 @click.option("--city", required=True, help="City key from cities.yaml (e.g., paris).")
 @click.option("--force", is_flag=True, help="Re-download existing files.")
@@ -90,11 +82,7 @@ def download(city: str, force: bool) -> None:
                 click.echo(f"   ❌ Unreadable: {f['file']}", err=True)
 
 
-# ===================================================================
 # Profile command
-# ===================================================================
-
-
 @cli.command()
 @click.option("--city", required=True, help="City key from cities.yaml.")
 def profile(city: str) -> None:
@@ -107,16 +95,14 @@ def profile(city: str) -> None:
 
     click.echo(f"\n✅ Profiled {len(profiles)} files:")
     for filename, p in profiles.items():
-        click.echo(f"   📄 {filename}: {p['row_count']:,} rows × {p['column_count']} columns")
+        click.echo(
+            f"   📄 {filename}: {p['row_count']:,} rows × {p['column_count']} columns"
+        )
 
     click.echo("\n📁 Outputs saved to: outputs/schemas/ and outputs/profiles/")
 
 
-# ===================================================================
 # Validate command
-# ===================================================================
-
-
 @cli.command()
 @click.option("--city", required=True, help="City key from cities.yaml.")
 def validate(city: str) -> None:
@@ -144,7 +130,9 @@ def validate(city: str) -> None:
 
         if summary.get("has_duplicates"):
             dup_info = fr.get("duplicates", {})
-            click.echo(f"      🔁 Duplicates: {dup_info.get('duplicate_keys', '?')} duplicate keys")
+            click.echo(
+                f"      🔁 Duplicates: {dup_info.get('duplicate_keys', '?')} duplicate keys"
+            )
 
         if summary.get("has_artifacts"):
             art_info = fr.get("scraping_artifacts", {})
@@ -155,11 +143,7 @@ def validate(city: str) -> None:
     click.echo("\n📁 Report saved to: outputs/quality/")
 
 
-# ===================================================================
 # Relationship mapping command
-# ===================================================================
-
-
 @cli.command(name="map-rels")
 @click.option("--city", required=True, help="City key from cities.yaml.")
 def map_relationships(city: str) -> None:
@@ -186,7 +170,9 @@ def map_relationships(city: str) -> None:
     click.echo("\n🔗 Foreign Key Validation:")
     for fk_result in report.get("foreign_key_validation", []):
         if fk_result.get("skipped"):
-            click.echo(f"   ⏭️  {fk_result['relationship']}: skipped ({fk_result.get('reason')})")
+            click.echo(
+                f"   ⏭️  {fk_result['relationship']}: skipped ({fk_result.get('reason')})"
+            )
             continue
         status = "✅" if fk_result.get("is_valid") else "⚠️"
         click.echo(
@@ -198,11 +184,7 @@ def map_relationships(city: str) -> None:
     click.echo("\n📁 Outputs saved to: outputs/relationships/")
 
 
-# ===================================================================
 # Harmonization command
-# ===================================================================
-
-
 @cli.command()
 @click.option(
     "--cities",
@@ -237,11 +219,7 @@ def harmonize(cities: str) -> None:
     click.echo("\n📁 Outputs saved to: outputs/harmonization/")
 
 
-# ===================================================================
 # Explore command (full single-city pipeline)
-# ===================================================================
-
-
 @cli.command()
 @click.option("--city", required=True, help="City key from cities.yaml.")
 @click.option("--skip-download", is_flag=True, help="Skip download step.")
@@ -287,18 +265,16 @@ def explore(city: str, skip_download: bool) -> None:
     # Step 4: Map relationships
     click.echo("\n🔗 Step 4/4: Mapping relationships...")
     rel_report = generate_relationship_report(city)
-    click.echo(f"   Mapped {len(rel_report.get('foreign_key_validation', []))} relationships.")
+    click.echo(
+        f"   Mapped {len(rel_report.get('foreign_key_validation', []))} relationships."
+    )
 
     click.echo("\n" + "=" * 60)
     click.echo(f"✅ Exploration complete for: {city}")
     click.echo("📁 All outputs saved to: outputs/")
 
 
-# ===================================================================
 # Explore-all command (all cities + harmonization)
-# ===================================================================
-
-
 @cli.command(name="explore-all")
 @click.option("--skip-download", is_flag=True, help="Skip download step.")
 def explore_all(skip_download: bool) -> None:
@@ -321,7 +297,9 @@ def explore_all(skip_download: bool) -> None:
     all_cities = load_city_config()
     city_names = list(all_cities.keys())
 
-    click.echo(f"🚀 Running full exploration for {len(city_names)} cities: {city_names}")
+    click.echo(
+        f"🚀 Running full exploration for {len(city_names)} cities: {city_names}"
+    )
     click.echo("=" * 60)
 
     for city in city_names:
@@ -366,11 +344,7 @@ def explore_all(skip_download: bool) -> None:
     click.echo("📁 All outputs saved to: outputs/")
 
 
-# ===================================================================
-# Quality report command (§3.1)
-# ===================================================================
-
-
+# Quality report command
 @cli.command(name="quality-report")
 @click.option("--city", required=True, help="City key from cities.yaml.")
 def quality_report(city: str) -> None:
@@ -418,11 +392,7 @@ def quality_report(city: str) -> None:
     click.echo("\n📁 Report saved to: outputs/quality/")
 
 
-# ===================================================================
-# Clean command (§3.2)
-# ===================================================================
-
-
+# Clean command
 @cli.command()
 @click.option("--city", required=True, help="City key from cities.yaml.")
 @click.option(
@@ -490,11 +460,7 @@ def clean(city: str, file_type: str) -> None:
     click.echo("📁 Cleaning summary: outputs/quality/")
 
 
-# ===================================================================
-# Ingest command (§3.1 combined: download + profile + quality report)
-# ===================================================================
-
-
+# Ingest command (combined: download + profile + quality report)
 @cli.command()
 @click.option("--city", required=True, help="City key from cities.yaml.")
 @click.option("--skip-download", is_flag=True, help="Skip download step.")
@@ -522,7 +488,9 @@ def ingest(city: str, skip_download: bool) -> None:
         click.echo("\n📥 Step 1/3: Downloading data...")
         results = download_city(city)
         summary = results["summary"]
-        click.echo(f"   Done: {summary['successful']} downloaded, {summary['skipped']} skipped")
+        click.echo(
+            f"   Done: {summary['successful']} downloaded, {summary['skipped']} skipped"
+        )
         verify_downloads(city)
     else:
         click.echo("\n⏭️  Step 1/3: Download skipped.")
@@ -543,11 +511,7 @@ def ingest(city: str, skip_download: bool) -> None:
     click.echo("📁 Outputs: outputs/schemas/, outputs/profiles/, outputs/quality/")
 
 
-# ===================================================================
-# Enrich command (Section 3.3)
-# ===================================================================
-
-
+# Enrich command
 @cli.command()
 @click.option("--city", required=True, help="City key from cities.yaml.")
 def enrich(city: str) -> None:
@@ -585,11 +549,7 @@ def unify_master(cities: str) -> None:
     click.echo(f"Unified master written: {output_path}")
 
 
-# ===================================================================
-# Model command (Section 3.4)
-# ===================================================================
-
-
+# Model command
 @cli.command()
 @click.option(
     "--cities",
@@ -619,7 +579,9 @@ def model(cities: str, skip_calendar: bool, skip_reviews: bool) -> None:
 
 
 @cli.command()
-@click.option("--name", "query_name", help="Named query from sql/analytical_queries.sql.")
+@click.option(
+    "--name", "query_name", help="Named query from sql/analytical_queries.sql."
+)
 @click.option("--sql", "sql_text", help="Ad-hoc SQL to run against the DuckDB model.")
 def query(query_name: str | None, sql_text: str | None) -> None:
     """Run an analytical query against the DuckDB star schema."""
@@ -636,11 +598,7 @@ def query(query_name: str | None, sql_text: str | None) -> None:
             click.echo(f"... {len(rows) - 50:,} additional rows omitted")
 
 
-# ===================================================================
-# Automated pipeline commands (Section 3.5)
-# ===================================================================
-
-
+# Automated pipeline commands
 def _print_pipeline_result(result) -> None:
     """Print a compact pipeline execution summary."""
     status = "SUCCESS" if result.success else "FAILED"
@@ -661,7 +619,9 @@ def _print_pipeline_result(result) -> None:
 @cli.command(name="run-pipeline")
 @click.option("--city", required=True, help="City key from cities.yaml.")
 @click.option("--skip-download", is_flag=True, help="Use existing raw files.")
-@click.option("--force", is_flag=True, help="Reprocess even when metadata says unchanged.")
+@click.option(
+    "--force", is_flag=True, help="Reprocess even when metadata says unchanged."
+)
 def run_pipeline(city: str, skip_download: bool, force: bool) -> None:
     city = city.replace("-", "_")
     """Run stages 1-4 for a single city with metadata tracking."""
@@ -680,14 +640,18 @@ def run_pipeline(city: str, skip_download: bool, force: bool) -> None:
     help="Optional comma-separated city keys. Defaults to all configured cities.",
 )
 @click.option("--skip-download", is_flag=True, help="Use existing raw files.")
-@click.option("--force", is_flag=True, help="Reprocess even when metadata says unchanged.")
+@click.option(
+    "--force", is_flag=True, help="Reprocess even when metadata says unchanged."
+)
 def run_pipeline_all(cities: str, skip_download: bool, force: bool) -> None:
     cities = cities.replace("-", "_")
     """Run stages 1-4 for multiple cities, then unify and model."""
     from pipelines.dags.data_pipeline_local import run_all_pipelines
 
     city_list = [city.strip() for city in cities.split(",") if city.strip()] or None
-    results = run_all_pipelines(city_names=city_list, skip_download=skip_download, force=force)
+    results = run_all_pipelines(
+        city_names=city_list, skip_download=skip_download, force=force
+    )
     for result in results:
         _print_pipeline_result(result)
 
@@ -696,7 +660,9 @@ def run_pipeline_all(cities: str, skip_download: bool, force: bool) -> None:
 
 
 @cli.command()
-@click.option("--table", "output_table", help="Output table or artifact name to filter.")
+@click.option(
+    "--table", "output_table", help="Output table or artifact name to filter."
+)
 def lineage(output_table: str | None) -> None:
     """Show recorded data lineage from the DuckDB metadata store."""
     from src.platform.common.metadata import get_lineage
@@ -705,13 +671,11 @@ def lineage(output_table: str | None) -> None:
     click.echo(json.dumps(rows, indent=2, default=str))
 
 
-# ===================================================================
-# ML Pipeline commands (Section 6)
-# ===================================================================
-
-
+# ML Pipeline commands
 @cli.command()
-@click.option("--config", default="config/ml_config.yaml", help="Path to ml_config.yaml.")
+@click.option(
+    "--config", default="config/ml_config.yaml", help="Path to ml_config.yaml."
+)
 @click.option("--force", is_flag=True, help="Retrain models even if they exist.")
 def train(config: str, force: bool) -> None:
     """§6.1: Train price prediction models with cross-validation."""
@@ -738,7 +702,9 @@ def train(config: str, force: bool) -> None:
 
 @cli.command()
 @click.option("--experiment-id", required=True, help="Experiment ID to evaluate.")
-@click.option("--config", default="config/ml_config.yaml", help="Path to ml_config.yaml.")
+@click.option(
+    "--config", default="config/ml_config.yaml", help="Path to ml_config.yaml."
+)
 def evaluate(experiment_id: str, config: str) -> None:
     """§6.1: Evaluate models on the held-out test set."""
     from src.platform.common.utils import get_db_path
@@ -785,7 +751,9 @@ def evaluate(experiment_id: str, config: str) -> None:
 
 @cli.command()
 @click.option("--experiment-id", required=True, help="Experiment ID to explain.")
-@click.option("--config", default="config/ml_config.yaml", help="Path to ml_config.yaml.")
+@click.option(
+    "--config", default="config/ml_config.yaml", help="Path to ml_config.yaml."
+)
 def explain(experiment_id: str, config: str) -> None:
     """§6.1: Generate SHAP explainability report."""
     from src.platform.common.utils import get_db_path
@@ -823,7 +791,9 @@ def explain(experiment_id: str, config: str) -> None:
 
 @cli.command(name="bias-audit")
 @click.option("--experiment-id", required=True, help="Experiment ID to audit.")
-@click.option("--config", default="config/ml_config.yaml", help="Path to ml_config.yaml.")
+@click.option(
+    "--config", default="config/ml_config.yaml", help="Path to ml_config.yaml."
+)
 def bias_audit(experiment_id: str, config: str) -> None:
     """§6.4: Run model generalization & bias analysis."""
     from src.platform.common.utils import get_db_path
@@ -861,7 +831,9 @@ def bias_audit(experiment_id: str, config: str) -> None:
 
 
 @cli.command(name="run-ml")
-@click.option("--config", default="config/ml_config.yaml", help="Path to ml_config.yaml.")
+@click.option(
+    "--config", default="config/ml_config.yaml", help="Path to ml_config.yaml."
+)
 @click.option("--force", is_flag=True, help="Retrain models even if they exist.")
 def run_ml(config: str, force: bool) -> None:
     """Run the complete ML pipeline: train → evaluate → explain → bias-audit."""
@@ -882,9 +854,6 @@ def run_ml(config: str, force: bool) -> None:
         sys.exit(1)
 
 
-# ===================================================================
 # Entry point
-# ===================================================================
-
 if __name__ == "__main__":
     cli()

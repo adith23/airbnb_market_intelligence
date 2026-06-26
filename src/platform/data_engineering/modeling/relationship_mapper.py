@@ -31,10 +31,7 @@ from src.platform.common.utils import (
 logger = logging.getLogger(__name__)
 
 
-# ===================================================================
 # Relationship definitions
-# ===================================================================
-
 # Known relationships between Inside Airbnb files.
 # Each relationship defines a parent (PK side) and child (FK side).
 KNOWN_RELATIONSHIPS: list[dict[str, Any]] = [
@@ -70,11 +67,7 @@ PRIMARY_KEYS: dict[str, list[str]] = {
 }
 
 
-# ===================================================================
 # Primary key validation
-# ===================================================================
-
-
 def validate_primary_keys(
     df: pl.DataFrame,
     key_columns: list[str],
@@ -134,11 +127,7 @@ def validate_primary_keys(
     return result
 
 
-# ===================================================================
 # Foreign key / referential integrity validation
-# ===================================================================
-
-
 def validate_referential_integrity(
     parent_df: pl.DataFrame,
     child_df: pl.DataFrame,
@@ -185,12 +174,16 @@ def validate_referential_integrity(
 
     child_unique_count = len(child_set)
     coverage_pct = (
-        round(len(matched) / child_unique_count * 100, 2) if child_unique_count > 0 else 100.0
+        round(len(matched) / child_unique_count * 100, 2)
+        if child_unique_count > 0
+        else 100.0
     )
 
     # Count total orphan rows (not just unique orphan keys)
     if orphans:
-        orphan_row_count = child_df.filter(pl.col(child_key).is_in(list(orphans))).height
+        orphan_row_count = child_df.filter(
+            pl.col(child_key).is_in(list(orphans))
+        ).height
     else:
         orphan_row_count = 0
 
@@ -225,11 +218,7 @@ def validate_referential_integrity(
     return result
 
 
-# ===================================================================
 # City-level relationship analysis
-# ===================================================================
-
-
 def generate_relationship_report(city_name: str) -> dict[str, Any]:
     """Generate a comprehensive relationship and integrity report for a city.
 
@@ -290,13 +279,15 @@ def generate_relationship_report(city_name: str) -> dict[str, Any]:
         except Exception:
             logger.exception("Failed to load: %s", filepath.name)
 
-    # 1. Validate primary keys
+    # Validate primary keys
     pk_results: dict[str, Any] = {}
     for file_type, pk_cols in PRIMARY_KEYS.items():
         if file_type in dataframes:
-            pk_results[file_type] = validate_primary_keys(dataframes[file_type], pk_cols, file_type)
+            pk_results[file_type] = validate_primary_keys(
+                dataframes[file_type], pk_cols, file_type
+            )
 
-    # 2. Validate foreign key relationships
+    # Validate foreign key relationships
     fk_results: list[dict[str, Any]] = []
     for rel in KNOWN_RELATIONSHIPS:
         parent_type = rel["parent"]["file_type"]
@@ -327,10 +318,10 @@ def generate_relationship_report(city_name: str) -> dict[str, Any]:
                 }
             )
 
-    # 3. Compute additional join statistics
+    # Compute additional join statistics
     join_stats = _compute_join_statistics(dataframes)
 
-    # 4. Generate Mermaid ERD
+    # Generate Mermaid ERD
     erd_mermaid = generate_erd_mermaid(dataframes, fk_results)
 
     # Build report
@@ -350,11 +341,7 @@ def generate_relationship_report(city_name: str) -> dict[str, Any]:
     return report
 
 
-# ===================================================================
 # Join statistics
-# ===================================================================
-
-
 def _compute_join_statistics(
     dataframes: dict[str, pl.DataFrame],
 ) -> dict[str, Any]:
@@ -375,7 +362,9 @@ def _compute_join_statistics(
 
         if "id" in listings_df.columns and "listing_id" in calendar_df.columns:
             calendar_per_listing = (
-                calendar_df.group_by("listing_id").len().rename({"len": "calendar_rows"})
+                calendar_df.group_by("listing_id")
+                .len()
+                .rename({"len": "calendar_rows"})
             )
             stats["calendar_per_listing"] = {
                 "mean": round(float(calendar_per_listing["calendar_rows"].mean()), 1),
@@ -401,7 +390,10 @@ def _compute_join_statistics(
     # Host analysis (from listings — hosts are denormalized)
     if "listings" in dataframes and "host_id" in dataframes["listings"].columns:
         listings_per_host = (
-            dataframes["listings"].group_by("host_id").len().rename({"len": "listing_count"})
+            dataframes["listings"]
+            .group_by("host_id")
+            .len()
+            .rename({"len": "listing_count"})
         )
         stats["listings_per_host"] = {
             "mean": round(float(listings_per_host["listing_count"].mean()), 1),
@@ -417,11 +409,7 @@ def _compute_join_statistics(
     return stats
 
 
-# ===================================================================
 # ERD generation (Mermaid)
-# ===================================================================
-
-
 def generate_erd_mermaid(
     dataframes: dict[str, pl.DataFrame],
     fk_results: list[dict[str, Any]],
@@ -454,7 +442,9 @@ def generate_erd_mermaid(
 
                 # Map cardinality to Mermaid notation
                 if card == "1:N":
-                    lines.append(f'    {parent} ||--o{{ {child} : "{desc} ({coverage}% coverage)"')
+                    lines.append(
+                        f'    {parent} ||--o{{ {child} : "{desc} ({coverage}% coverage)"'
+                    )
                 break
 
     # Add entity definitions with key columns
@@ -468,7 +458,10 @@ def generate_erd_mermaid(
             key_marker = "PK" if col_name in pk_cols else ""
             # Check if it's a foreign key
             for rel in KNOWN_RELATIONSHIPS:
-                if rel["child"]["file_type"] == file_type and rel["child"]["key"] == col_name:
+                if (
+                    rel["child"]["file_type"] == file_type
+                    and rel["child"]["key"] == col_name
+                ):
                     key_marker = "FK"
                     break
             lines.append(f"        {dtype} {col_name} {key_marker}".rstrip())
@@ -477,11 +470,7 @@ def generate_erd_mermaid(
     return "\n".join(lines)
 
 
-# ===================================================================
 # Output persistence
-# ===================================================================
-
-
 def _save_relationship_report(city_name: str, report: dict) -> Path:
     """Save relationship report to outputs/relationships/."""
     output_dir = get_output_dir("relationships")

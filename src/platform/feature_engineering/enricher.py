@@ -1,4 +1,4 @@
-"""Data enrichment and joining pipeline for Section 3.3.
+"""Data enrichment and joining pipeline.
 
 This module turns cleaned staging Parquet files into analytics-ready
 gold-layer listing datasets. It keeps listings as the base grain, then
@@ -86,7 +86,9 @@ def _active_listing_config() -> tuple[int, int]:
     try:
         config = load_yaml_config(CONFIG_DIR / "enrichment_config.yaml")
     except Exception:
-        logger.warning("Could not load enrichment config; using active-listing defaults")
+        logger.warning(
+            "Could not load enrichment config; using active-listing defaults"
+        )
         return 12, 1
 
     active = config.get("active_listing", {})
@@ -132,7 +134,9 @@ def _aggregate_calendar(staging_dir: Path) -> pl.DataFrame | None:
     required = {"listing_id", "available"}
     missing = required - set(df.columns)
     if missing:
-        raise ValueError(f"Calendar staging data is missing required columns: {sorted(missing)}")
+        raise ValueError(
+            f"Calendar staging data is missing required columns: {sorted(missing)}"
+        )
 
     price_col = _price_column(df)
 
@@ -145,13 +149,22 @@ def _aggregate_calendar(staging_dir: Path) -> pl.DataFrame | None:
     if price_col is not None:
         agg_exprs.extend(
             [
-                pl.col(price_col).filter(pl.col("available")).mean().alias("avg_asking_price"),
-                pl.col(price_col).filter(pl.col("available")).median().alias("median_asking_price"),
+                pl.col(price_col)
+                .filter(pl.col("available"))
+                .mean()
+                .alias("avg_asking_price"),
+                pl.col(price_col)
+                .filter(pl.col("available"))
+                .median()
+                .alias("median_asking_price"),
                 pl.col(price_col)
                 .filter(~pl.col("available"))
                 .sum()
                 .alias("estimated_annual_revenue"),
-                pl.col(price_col).filter(~pl.col("available")).mean().alias("avg_booked_price"),
+                pl.col(price_col)
+                .filter(~pl.col("available"))
+                .mean()
+                .alias("avg_booked_price"),
             ]
         )
 
@@ -202,7 +215,9 @@ def _aggregate_reviews(staging_dir: Path) -> pl.DataFrame | None:
     required = {"listing_id", "date"}
     missing = required - set(df.columns)
     if missing:
-        raise ValueError(f"Reviews staging data is missing required columns: {sorted(missing)}")
+        raise ValueError(
+            f"Reviews staging data is missing required columns: {sorted(missing)}"
+        )
 
     agg_exprs: list[pl.Expr] = [
         pl.len().alias("review_count_computed"),
@@ -214,8 +229,15 @@ def _aggregate_reviews(staging_dir: Path) -> pl.DataFrame | None:
     if "comments" in df.columns:
         agg_exprs.extend(
             [
-                pl.col("comments").str.len_chars().mean().round(0).alias("avg_comment_length"),
-                pl.col("comments").str.len_chars().median().alias("median_comment_length"),
+                pl.col("comments")
+                .str.len_chars()
+                .mean()
+                .round(0)
+                .alias("avg_comment_length"),
+                pl.col("comments")
+                .str.len_chars()
+                .median()
+                .alias("median_comment_length"),
             ]
         )
 
@@ -236,7 +258,9 @@ def _load_neighbourhood_reference(staging_dir: Path) -> pl.DataFrame | None:
         "neighbourhood_group": "neighbourhood_group",
         "neighborhood_group": "neighbourhood_group",
     }
-    applicable = {src: dst for src, dst in rename_map.items() if src in df.columns and src != dst}
+    applicable = {
+        src: dst for src, dst in rename_map.items() if src in df.columns and src != dst
+    }
     if applicable:
         df = df.rename(applicable)
 
@@ -259,7 +283,9 @@ def _aggregate_neighbourhoods(
         ["neighbourhood_cleansed", "neighbourhood_name", "neighbourhood"],
     )
     if group_col is None:
-        logger.warning("No neighbourhood column found; skipping neighbourhood aggregates")
+        logger.warning(
+            "No neighbourhood column found; skipping neighbourhood aggregates"
+        )
         return pl.DataFrame()
 
     price_col = _price_column(listings_df)
@@ -274,18 +300,27 @@ def _aggregate_neighbourhoods(
         )
     if "review_scores_rating" in listings_df.columns:
         agg_exprs.append(
-            pl.col("review_scores_rating").mean().round(2).alias("neighbourhood_avg_rating")
+            pl.col("review_scores_rating")
+            .mean()
+            .round(2)
+            .alias("neighbourhood_avg_rating")
         )
     if "availability_365" in listings_df.columns:
         agg_exprs.append(
-            pl.col("availability_365").mean().round(1).alias("neighbourhood_avg_availability")
+            pl.col("availability_365")
+            .mean()
+            .round(1)
+            .alias("neighbourhood_avg_availability")
         )
 
     agg = listings_df.group_by(group_col).agg(agg_exprs)
     if group_col != "neighbourhood_cleansed":
         agg = agg.rename({group_col: "neighbourhood_cleansed"})
 
-    if neighbourhood_ref is not None and "neighbourhood_name" in neighbourhood_ref.columns:
+    if (
+        neighbourhood_ref is not None
+        and "neighbourhood_name" in neighbourhood_ref.columns
+    ):
         agg = agg.join(
             neighbourhood_ref,
             left_on="neighbourhood_cleansed",
@@ -310,25 +345,36 @@ def _join_master(
     coverage: dict[str, float] = {}
 
     if calendar_agg is not None and not calendar_agg.is_empty():
-        master = master.join(calendar_agg, left_on=join_key, right_on="listing_id", how="left")
+        master = master.join(
+            calendar_agg, left_on=join_key, right_on="listing_id", how="left"
+        )
         matched = master.filter(pl.col("total_days").is_not_null()).height
         coverage["calendar"] = round(matched / total * 100, 1)
 
     if review_agg is not None and not review_agg.is_empty():
-        master = master.join(review_agg, left_on=join_key, right_on="listing_id", how="left")
+        master = master.join(
+            review_agg, left_on=join_key, right_on="listing_id", how="left"
+        )
         matched = master.filter(pl.col("review_count_computed").is_not_null()).height
         coverage["reviews"] = round(matched / total * 100, 1)
 
     if neighbourhood_agg is not None and not neighbourhood_agg.is_empty():
-        nbhd_col = _first_existing(master.columns, ["neighbourhood_cleansed", "neighbourhood"])
-        if nbhd_col is not None and "neighbourhood_cleansed" in neighbourhood_agg.columns:
+        nbhd_col = _first_existing(
+            master.columns, ["neighbourhood_cleansed", "neighbourhood"]
+        )
+        if (
+            nbhd_col is not None
+            and "neighbourhood_cleansed" in neighbourhood_agg.columns
+        ):
             master = master.join(
                 neighbourhood_agg,
                 left_on=nbhd_col,
                 right_on="neighbourhood_cleansed",
                 how="left",
             )
-            matched = master.filter(pl.col("neighbourhood_listing_count").is_not_null()).height
+            matched = master.filter(
+                pl.col("neighbourhood_listing_count").is_not_null()
+            ).height
             coverage["neighbourhood"] = round(matched / total * 100, 1)
 
     return master, coverage
@@ -348,18 +394,30 @@ def _compute_derived_fields(
 
     if "host_since" in df.columns and scrape_date is not None:
         df = df.with_columns(
-            ((pl.lit(scrape_date).cast(pl.Date) - pl.col("host_since")).dt.total_days() / 365.25)
+            (
+                (
+                    pl.lit(scrape_date).cast(pl.Date) - pl.col("host_since")
+                ).dt.total_days()
+                / 365.25
+            )
             .round(2)
             .alias("host_tenure_years")
         )
         fields_added.append("host_tenure_years")
 
-    if "number_of_reviews" in df.columns and "first_review" in df.columns and scrape_date:
+    if (
+        "number_of_reviews" in df.columns
+        and "first_review" in df.columns
+        and scrape_date
+    ):
         months_since = (
-            (pl.lit(scrape_date).cast(pl.Date) - pl.col("first_review")).dt.total_days() / 30.44
+            (pl.lit(scrape_date).cast(pl.Date) - pl.col("first_review")).dt.total_days()
+            / 30.44
         ).clip(lower_bound=1)
         df = df.with_columns(
-            pl.when(pl.col("first_review").is_not_null() & (pl.col("number_of_reviews") > 0))
+            pl.when(
+                pl.col("first_review").is_not_null() & (pl.col("number_of_reviews") > 0)
+            )
             .then((pl.col("number_of_reviews") / months_since).round(2))
             .otherwise(None)
             .alias("review_frequency_monthly")
@@ -389,7 +447,10 @@ def _compute_derived_fields(
         cutoff = scrape_date - timedelta(days=round(review_months * 30.44))
         df = df.with_columns(
             (
-                (pl.col("last_review").is_not_null() & (pl.col("last_review") >= cutoff))
+                (
+                    pl.col("last_review").is_not_null()
+                    & (pl.col("last_review") >= cutoff)
+                )
                 | (
                     pl.col("availability_365").is_not_null()
                     & (pl.col("availability_365") >= min_availability)
@@ -409,14 +470,20 @@ def _compute_derived_fields(
     if host_count_col is not None:
         threshold = _professional_host_threshold()
         df = df.with_columns(
-            (pl.col(host_count_col).is_not_null() & (pl.col(host_count_col) >= threshold)).alias(
-                "is_professional_host"
-            )
+            (
+                pl.col(host_count_col).is_not_null()
+                & (pl.col(host_count_col) >= threshold)
+            ).alias("is_professional_host")
         )
         fields_added.append("is_professional_host")
 
-    if "estimated_monthly_revenue" not in df.columns and "occupancy_rate_pct" in df.columns:
-        revenue_base_price = "avg_booked_price" if "avg_booked_price" in df.columns else price_col
+    if (
+        "estimated_monthly_revenue" not in df.columns
+        and "occupancy_rate_pct" in df.columns
+    ):
+        revenue_base_price = (
+            "avg_booked_price" if "avg_booked_price" in df.columns else price_col
+        )
         if revenue_base_price and revenue_base_price in df.columns:
             df = df.with_columns(
                 (pl.col("occupancy_rate_pct") / 100.0 * pl.col(revenue_base_price) * 30)
@@ -425,9 +492,14 @@ def _compute_derived_fields(
             )
             fields_added.append("estimated_monthly_revenue")
 
-    if "estimated_annual_revenue" not in df.columns and "estimated_monthly_revenue" in df.columns:
+    if (
+        "estimated_annual_revenue" not in df.columns
+        and "estimated_monthly_revenue" in df.columns
+    ):
         df = df.with_columns(
-            (pl.col("estimated_monthly_revenue") * 12).round(2).alias("estimated_annual_revenue")
+            (pl.col("estimated_monthly_revenue") * 12)
+            .round(2)
+            .alias("estimated_annual_revenue")
         )
         fields_added.append("estimated_annual_revenue")
 
@@ -454,7 +526,9 @@ def _add_city_metadata(
     return df.with_columns(
         [
             pl.lit(city_name).alias("city"),
-            pl.lit(city_config.get("display_name", city_name)).alias("city_display_name"),
+            pl.lit(city_config.get("display_name", city_name)).alias(
+                "city_display_name"
+            ),
             pl.lit(city_config.get("country", "")).alias("country"),
             pl.lit(city_config.get("currency_code", "USD")).alias("currency_code"),
             pl.lit(city_config.get("currency_symbol", "")).alias("currency_symbol"),
@@ -513,7 +587,9 @@ def enrich_city(city_name: str) -> EnrichmentResult:
     review_agg = _aggregate_reviews(staging_dir)
     neighbourhood_agg = _aggregate_neighbourhoods(listings_df, neighbourhood_ref)
 
-    master, coverage = _join_master(listings_df, calendar_agg, review_agg, neighbourhood_agg)
+    master, coverage = _join_master(
+        listings_df, calendar_agg, review_agg, neighbourhood_agg
+    )
     master, fields_added = _compute_derived_fields(master, scrape_date)
     master = _add_city_metadata(master, city_name, city_config)
     master = _add_usd_prices(
@@ -536,7 +612,9 @@ def enrich_city(city_name: str) -> EnrichmentResult:
         result=EnrichmentResult(
             city=city_name,
             listings_count=master.height,
-            calendar_rows_aggregated=(calendar_agg.height if calendar_agg is not None else 0),
+            calendar_rows_aggregated=(
+                calendar_agg.height if calendar_agg is not None else 0
+            ),
             reviews_aggregated=review_agg.height if review_agg is not None else 0,
             derived_fields_added=fields_added,
             join_coverage=coverage,

@@ -27,11 +27,7 @@ logger = logging.getLogger(__name__)
 OUTPUTS_DIR = OUTPUT_DIR / "ml"
 
 
-# ===================================================================
 # Data Classes
-# ===================================================================
-
-
 @dataclass
 class ModelMetrics:
     """Evaluation metrics for a single model on a dataset split."""
@@ -95,11 +91,7 @@ class EvaluationReport:
     success_check: dict[str, bool]
 
 
-# ===================================================================
 # Core Metrics
-# ===================================================================
-
-
 def compute_metrics(
     y_true: np.ndarray,
     y_pred: np.ndarray,
@@ -154,11 +146,7 @@ def compute_metrics(
     )
 
 
-# ===================================================================
 # Residual Diagnostics
-# ===================================================================
-
-
 def compute_residual_diagnostics(
     y_true: np.ndarray,
     y_pred: np.ndarray,
@@ -211,11 +199,7 @@ def compute_residual_diagnostics(
     )
 
 
-# ===================================================================
 # Stratified Error Analysis
-# ===================================================================
-
-
 def stratified_error_analysis(
     y_true: np.ndarray,
     y_pred: np.ndarray,
@@ -271,7 +255,8 @@ def stratified_error_analysis(
             nonzero = g_true > 1.0
             if nonzero.sum() > 0:
                 mape = float(
-                    np.mean(np.abs(g_true[nonzero] - g_pred[nonzero]) / g_true[nonzero]) * 100
+                    np.mean(np.abs(g_true[nonzero] - g_pred[nonzero]) / g_true[nonzero])
+                    * 100
                 )
             else:
                 mape = np.nan
@@ -291,11 +276,7 @@ def stratified_error_analysis(
     return results
 
 
-# ===================================================================
 # Prediction Intervals
-# ===================================================================
-
-
 def evaluate_prediction_intervals(
     quantile_models: dict[str, Any],
     X_test: pd.DataFrame,
@@ -350,11 +331,7 @@ def evaluate_prediction_intervals(
     }
 
 
-# ===================================================================
 # Model Comparison
-# ===================================================================
-
-
 def compare_models(test_metrics: dict[str, ModelMetrics]) -> pd.DataFrame:
     """Create a side-by-side model comparison table.
 
@@ -370,11 +347,7 @@ def compare_models(test_metrics: dict[str, ModelMetrics]) -> pd.DataFrame:
     return df.sort_values("mae")
 
 
-# ===================================================================
 # Report Generation
-# ===================================================================
-
-
 def _check_success_thresholds(
     metrics: ModelMetrics,
     thresholds: dict[str, float],
@@ -434,11 +407,7 @@ def generate_evaluation_report(
     )
 
 
-# ===================================================================
 # Saving Reports
-# ===================================================================
-
-
 def save_evaluation_report(report: EvaluationReport) -> Path:
     """Save evaluation report as JSON and Markdown.
 
@@ -575,11 +544,7 @@ def _generate_markdown_report(report: EvaluationReport, output_dir: Path) -> Non
         fh.write("\n".join(lines))
 
 
-# ===================================================================
 # Main Entry Point
-# ===================================================================
-
-
 def evaluate_experiment(
     experiment_result: Any,
     split: Any,
@@ -618,7 +583,9 @@ def evaluate_experiment(
         metrics = compute_metrics(split.y_test.values, y_pred, name, log_transformed)
         test_metrics[name] = metrics
 
-        diag = compute_residual_diagnostics(split.y_test.values, y_pred, log_transformed)
+        diag = compute_residual_diagnostics(
+            split.y_test.values, y_pred, log_transformed
+        )
         residual_diag[name] = diag
 
         logger.info(
@@ -634,7 +601,9 @@ def evaluate_experiment(
     best_model = experiment_result.models[best_name]
     y_pred_best = best_model.predict(split.X_test)
 
-    strat_dims = [d["column"] for d in config.get("bias_audit", {}).get("dimensions", [])]
+    strat_dims = [
+        d["column"] for d in config.get("bias_audit", {}).get("dimensions", [])
+    ]
     if not strat_dims:
         strat_dims = ["city", "room_type", "neighbourhood_group", "price_quintile"]
 

@@ -40,11 +40,7 @@ from notebooks.statistics.stats_utils import (
     two_group_test,
 )
 
-# ===================================================================
 # Fixtures
-# ===================================================================
-
-
 @pytest.fixture()
 def normal_data() -> np.ndarray:
     """Generate normally distributed data."""
@@ -75,11 +71,7 @@ def two_similar_groups() -> tuple[np.ndarray, np.ndarray]:
     return a, b
 
 
-# ===================================================================
 # Assumption Checks
-# ===================================================================
-
-
 class TestCheckNormality:
     """Tests for check_normality function."""
 
@@ -142,11 +134,7 @@ class TestCheckIndependenceNote:
         assert "independent" in result.note
 
 
-# ===================================================================
 # Effect Sizes
-# ===================================================================
-
-
 class TestCohensD:
     """Tests for cohens_d function."""
 
@@ -216,11 +204,7 @@ class TestEpsilonSquared:
         assert isinstance(mag, str)
 
 
-# ===================================================================
 # Confidence Intervals
-# ===================================================================
-
-
 class TestBootstrapCI:
     """Tests for bootstrap_ci function."""
 
@@ -258,11 +242,7 @@ class TestAnalyticalCI:
         assert np.isnan(ci.mean)
 
 
-# ===================================================================
 # Hypothesis Test Wrappers
-# ===================================================================
-
-
 class TestTwoGroupTest:
     """Tests for two_group_test function."""
 
@@ -373,11 +353,7 @@ class TestPairedTest:
         assert result.sample_sizes["pairs"] == 200
 
 
-# ===================================================================
 # Regression & VIF
-# ===================================================================
-
-
 class TestComputeVIF:
     """Tests for compute_vif function."""
 
@@ -429,11 +405,7 @@ class TestOLSRegression:
         assert len(result.vif_scores) == 2  # x1, x2
 
 
-# ===================================================================
 # Multiple Comparison Corrections
-# ===================================================================
-
-
 class TestApplyCorrection:
     """Tests for apply_correction function."""
 
@@ -463,11 +435,7 @@ class TestApplyCorrection:
         assert list(result["Test"]) == ["H1", "H2"]
 
 
-# ===================================================================
 # Display Helpers
-# ===================================================================
-
-
 class TestFormatTestResult:
     """Tests for format_test_result function."""
 

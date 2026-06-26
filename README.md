@@ -72,9 +72,25 @@ docker compose up --build
 ```
 *This command builds the Docker containers, runs the full data pipeline (`run-pipeline-all --skip-download`), trains the ML pipeline (`run-ml`), and starts the Streamlit dashboard on port `8080`. Access the dashboard in your browser at **http://localhost:8080**.*
 
+- **To run the entire system**:
+  ```bash
+  docker compose up
+  ```
 - **To run only the Streamlit dashboard** (if database and ML models are already generated):
   ```bash
-  docker compose up dashboard
+  docker compose up dashboard --no-deps
+  ```
+- **To run both Data & ML pipelines sequentially** (without starting the dashboard):
+  ```bash
+  docker compose run --rm pipeline
+  ```
+- **To run only the Data Engineering Pipeline**:
+  ```bash
+  docker compose run --rm pipeline python main.py run-pipeline-all
+  ```
+- **To run only the Machine Learning Pipeline**:
+  ```bash
+  docker compose run --rm pipeline python main.py run-ml
   ```
 - **To run specific CLI commands inside Docker**:
   ```bash

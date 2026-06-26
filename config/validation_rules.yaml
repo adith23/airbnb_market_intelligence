@@ -50,8 +50,7 @@ listings:
   availability_365:
     range: { min: 0, max: 365 }
   review_scores_rating:
-    range: { min: 0, max: 100 }    # handles both 0-5 and 0-100 scales
-
+    range: { min: 0, max: 100 }    
 calendar:
   listing_id:
     not_null: true

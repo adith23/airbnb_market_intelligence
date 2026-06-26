@@ -17,11 +17,7 @@ from src.platform.data_engineering.ingestion.profiler import (
     profile_file,
 )
 
-# ===================================================================
 # Fixtures
-# ===================================================================
-
-
 @pytest.fixture
 def sample_csv(tmp_path: Path) -> Path:
     """Create a minimal sample CSV for testing."""
@@ -59,11 +55,7 @@ def sample_df() -> pl.DataFrame:
     )
 
 
-# ===================================================================
 # Schema inference
-# ===================================================================
-
-
 class TestInferSchema:
     def test_basic_schema(self, sample_csv: Path):
         schema = infer_schema(sample_csv)
@@ -96,11 +88,7 @@ class TestInferSchema:
         assert len(schema["schema_hash"]) == 32  # MD5 hex
 
 
-# ===================================================================
 # Column statistics
-# ===================================================================
-
-
 class TestComputeColumnStats:
     def test_numeric_stats(self, sample_df: pl.DataFrame):
         stats = compute_column_stats(sample_df, "numeric_col")
@@ -120,11 +108,7 @@ class TestComputeColumnStats:
         assert "min_length" in stats
 
 
-# ===================================================================
 # Full file profiling
-# ===================================================================
-
-
 class TestProfileFile:
     def test_profile_output(self, sample_csv: Path):
         profile = profile_file(sample_csv)

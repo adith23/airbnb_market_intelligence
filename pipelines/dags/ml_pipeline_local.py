@@ -1,4 +1,4 @@
-"""Orchestrator for the ML pipeline (§6.1 and §6.4).
+"""Orchestrator for the ML pipeline.
 
 Coordinates feature engineering, training, evaluation, explainability,
 and bias auditing. Integrates with the existing pipeline automation
@@ -77,7 +77,7 @@ def run_ml_pipeline(
       2. Model Training & CV
       3. Evaluation (Test Set)
       4. Explainability (SHAP)
-      5. Bias Audit (§6.4)
+      5. Bias Audit
 
     Args:
         config_path: Path to ml_config.yaml.

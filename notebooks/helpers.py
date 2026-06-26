@@ -27,20 +27,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-# ===================================================================
 # Paths
-# ===================================================================
-
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _DB_PATH = _PROJECT_ROOT / "data" / "airbnb.duckdb"
 _SQL_DIR = _PROJECT_ROOT / "sql"
 _DATA_DIR = _PROJECT_ROOT / "data"
 _CONFIG_DIR = _PROJECT_ROOT / "config"
 
-# ===================================================================
 # Airbnb brand palette
-# ===================================================================
-
 AIRBNB_PALETTE = [
     "#FF5A5F",  # Rausch (primary red/coral)
     "#00A699",  # Babu (teal)
@@ -75,11 +69,7 @@ CITY_DISPLAY: dict[str, str] = {
 }
 
 
-# ===================================================================
 # DuckDB Connection Manager
-# ===================================================================
-
-
 class AirbnbDB:
     """Context-manager for read-only access to the Airbnb DuckDB star schema.
 
@@ -177,11 +167,7 @@ class AirbnbDB:
         self.close()
 
 
-# ===================================================================
 # Enriched Parquet loader (for columns not in star schema)
-# ===================================================================
-
-
 def load_enriched_master(city: str | None = None) -> pd.DataFrame:
     """Load enriched master listings Parquet as Pandas DataFrame.
 
@@ -226,11 +212,7 @@ def load_raw_geojson(city: str) -> dict:
         return json.load(f)
 
 
-# ===================================================================
 # Plot Styling
-# ===================================================================
-
-
 def set_airbnb_style(dark: bool = False) -> None:
     """Configure matplotlib and seaborn with Airbnb-inspired styling.
 
@@ -273,11 +255,7 @@ def set_airbnb_style(dark: bool = False) -> None:
     )
 
 
-# ===================================================================
 # Business Insight Formatter
-# ===================================================================
-
-
 def business_insight(
     title: str,
     finding: str,
@@ -310,11 +288,7 @@ def business_insight(
     """)
 
 
-# ===================================================================
 # Formatting Utilities
-# ===================================================================
-
-
 def fmt_currency(value: float, symbol: str = "$", decimals: int = 0) -> str:
     """Format a number as currency: $1,250."""
     if pd.isna(value):

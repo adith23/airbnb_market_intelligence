@@ -1,4 +1,4 @@
-"""DuckDB star-schema builder for Section 3.4.
+"""DuckDB star-schema builder.
 
 The modeler loads enriched master listings plus cleaned staging event
 tables into an analytics-ready dimensional model:

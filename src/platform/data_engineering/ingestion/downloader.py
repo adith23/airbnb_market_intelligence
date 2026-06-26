@@ -37,14 +37,9 @@ from src.platform.common.utils import (
 logger = logging.getLogger(__name__)
 
 # Download settings
-CHUNK_SIZE = 8192  # 8 KB chunks for streaming downloads
-REQUEST_TIMEOUT = 60  # seconds
+CHUNK_SIZE = 8192
+REQUEST_TIMEOUT = 60
 MAX_RETRIES = 3
-
-
-# ===================================================================
-# URL construction
-# ===================================================================
 
 
 def _build_base_url(city_config: dict) -> str:
@@ -87,11 +82,6 @@ def _build_file_url(base_url: str, filename: str) -> str:
     if filename.endswith(".gz"):
         return f"{base_url}/data/{filename}"
     return f"{base_url}/visualisations/{filename}"
-
-
-# ===================================================================
-# Single file download
-# ===================================================================
 
 
 def _download_file(
@@ -158,7 +148,9 @@ def _download_file(
 
             result["size_bytes"] = dest_path.stat().st_size
             result["status"] = "SUCCESS"
-            logger.info("Downloaded: %s (%s bytes)", dest_path.name, result["size_bytes"])
+            logger.info(
+                "Downloaded: %s (%s bytes)", dest_path.name, result["size_bytes"]
+            )
             return result
 
         except requests.RequestException as exc:
@@ -175,11 +167,6 @@ def _download_file(
                 logger.error("All %d attempts failed for: %s", MAX_RETRIES, url)
 
     return result
-
-
-# ===================================================================
-# City-level download
-# ===================================================================
 
 
 def download_city(
@@ -215,13 +202,11 @@ def download_city(
         city_config["scrape_date"],
     )
 
-    # Collect all files to download
     all_files: list[str] = []
     file_groups = city_config.get("files", {})
     for _group_name, filenames in file_groups.items():
         all_files.extend(filenames)
 
-    # Download each file
     download_results: list[dict[str, Any]] = []
     for filename in all_files:
         url = _build_file_url(base_url, filename)
@@ -229,16 +214,16 @@ def download_city(
         result = _download_file(url, dest_path, force=force)
         download_results.append(result)
 
-    # Build summary
     summary = {
         "total_files": len(download_results),
         "successful": sum(1 for r in download_results if r["status"] == "SUCCESS"),
-        "skipped": sum(1 for r in download_results if r["status"] in ("EXISTS", "SKIPPED")),
+        "skipped": sum(
+            1 for r in download_results if r["status"] in ("EXISTS", "SKIPPED")
+        ),
         "failed": sum(1 for r in download_results if r["status"] == "FAILED"),
         "total_bytes": sum(r["size_bytes"] for r in download_results),
     }
 
-    # Build full metadata record
     metadata = {
         "city": city_name,
         "display_name": city_config["display_name"],
@@ -249,7 +234,6 @@ def download_city(
         "summary": summary,
     }
 
-    # Persist ingestion metadata
     _save_ingestion_log(city_name, metadata)
 
     status_msg = (
@@ -259,11 +243,6 @@ def download_city(
     logger.info(status_msg)
 
     return metadata
-
-
-# ===================================================================
-# Verification
-# ===================================================================
 
 
 def verify_downloads(city_name: str) -> dict[str, Any]:
@@ -294,7 +273,6 @@ def verify_downloads(city_name: str) -> dict[str, Any]:
 
         if filepath.exists():
             try:
-                # Quick readability check: read first 1KB
                 with open(filepath, "rb") as fh:
                     fh.read(1024)
                 file_result["readable"] = True
@@ -319,11 +297,6 @@ def verify_downloads(city_name: str) -> dict[str, Any]:
         report["all_readable"],
     )
     return report
-
-
-# ===================================================================
-# Metadata persistence
-# ===================================================================
 
 
 def _save_ingestion_log(city_name: str, metadata: dict) -> Path:

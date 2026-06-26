@@ -13,7 +13,11 @@ services:
       - PYTHONUNBUFFERED=1
       - ENVIRONMENT=local
     volumes:
-      # Bind mount data, outputs, and config directories for persistence and sharing
+      # Bind mount workspace for live-reloading / hot-reloading code changes
+      - .:/app
+      # Mask the local virtualenv to avoid library conflicts
+      - /app/.venv
+      # Explicit volumes for data, outputs, and configuration
       - ./data:/app/data
       - ./outputs:/app/outputs
       - ./config:/app/config
@@ -36,6 +40,11 @@ services:
     ports:
       - "8080:8080"
     volumes:
+      # Bind mount workspace for live-reloading / hot-reloading code changes
+      - .:/app
+      # Mask the local virtualenv to avoid library conflicts
+      - /app/.venv
+      # Explicit volumes for data, outputs, and configuration
       - ./data:/app/data
       - ./outputs:/app/outputs
       - ./config:/app/config

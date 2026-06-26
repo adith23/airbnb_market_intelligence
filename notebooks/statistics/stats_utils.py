@@ -23,11 +23,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats as sp_stats
 
-# ===================================================================
 # Data Classes
-# ===================================================================
-
-
 @dataclass(frozen=True)
 class AssumptionResult:
     """Outcome of a distributional assumption check."""
@@ -91,11 +87,7 @@ class RegressionResult:
     warnings: list[str] = field(default_factory=list)
 
 
-# ===================================================================
 # Assumption Checks
-# ===================================================================
-
-
 def check_normality(
     data: np.ndarray,
     alpha: float = 0.05,
@@ -223,11 +215,7 @@ def check_independence_note(context: str) -> AssumptionResult:
     )
 
 
-# ===================================================================
 # Effect Sizes
-# ===================================================================
-
-
 def _magnitude_label(value: float, thresholds: dict[str, float]) -> str:
     """Classify an effect size into negligible/small/medium/large."""
     abs_val = abs(value)
@@ -334,11 +322,7 @@ def epsilon_squared(h_statistic: float, n: int, k: int) -> tuple[float, str]:
     return round(eps_sq, 4), magnitude
 
 
-# ===================================================================
 # Confidence Intervals
-# ===================================================================
-
-
 def bootstrap_ci(
     data: np.ndarray,
     statistic_func: Callable[[np.ndarray], float] = np.mean,
@@ -439,11 +423,7 @@ def analytical_ci(
     )
 
 
-# ===================================================================
 # Hypothesis Test Wrappers
-# ===================================================================
-
-
 def two_group_test(
     group_a: np.ndarray,
     group_b: np.ndarray,
@@ -761,11 +741,7 @@ def paired_test(
     )
 
 
-# ===================================================================
 # Post-hoc Pairwise Comparisons
-# ===================================================================
-
-
 def _pairwise_posthoc(
     groups: dict[str, np.ndarray],
     alpha: float,
@@ -798,11 +774,7 @@ def _pairwise_posthoc(
     return pd.DataFrame(records).sort_values("p-value (raw)")
 
 
-# ===================================================================
 # Regression & Multicollinearity
-# ===================================================================
-
-
 def compute_vif(X: pd.DataFrame) -> pd.DataFrame:
     """Compute Variance Inflation Factor for each feature.
 
@@ -934,11 +906,7 @@ def ols_regression(
     )
 
 
-# ===================================================================
 # Multiple Comparison Corrections
-# ===================================================================
-
-
 def apply_correction(
     p_values: list[float],
     labels: list[str] | None = None,
@@ -979,11 +947,7 @@ def apply_correction(
     )
 
 
-# ===================================================================
 # Display Helpers
-# ===================================================================
-
-
 def format_test_result(result: HypothesisTestResult) -> str:
     """Format a HypothesisTestResult as publication-ready markdown."""
     sig_icon = "✅" if result.is_significant else "❌"
@@ -1046,11 +1010,7 @@ def format_ci_table(intervals: dict[str, ConfidenceInterval]) -> pd.DataFrame:
     return pd.DataFrame(records)
 
 
-# ===================================================================
 # Internal Helpers
-# ===================================================================
-
-
 def _build_conclusion(
     test_name: str,
     hypothesis_id: str,

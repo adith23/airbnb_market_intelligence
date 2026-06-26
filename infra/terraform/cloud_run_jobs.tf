@@ -1,6 +1,4 @@
-# =========================================================
-# Cloud Run Jobs (Serverless Alternatives to Airflow)
-# =========================================================
+# Cloud Run Jobs
 
 # Data Pipeline Job
 resource "google_cloud_run_v2_job" "data_pipeline" {
@@ -126,9 +124,7 @@ resource "google_cloud_run_v2_job" "ml_pipeline" {
   }
 }
 
-# =========================================================
 # Cloud Scheduler Triggers
-# =========================================================
 
 # Trigger Data Pipeline Weekly (e.g., Sunday at 2 AM)
 resource "google_cloud_scheduler_job" "trigger_data_pipeline" {

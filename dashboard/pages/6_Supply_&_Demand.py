@@ -15,9 +15,12 @@ st.title("📈 Supply Concentration & Temporal Trends")
 # Global Filters
 st.sidebar.header("Filters")
 cities_map = fetch_available_cities()
+options = ["All Cities"] + list(cities_map.values())
+default_index = options.index("New York City") if "New York City" in options else 0
 selected_city_name = st.sidebar.selectbox(
     "Select Market",
-    options=["All Cities"] + list(cities_map.values()),
+    options=options,
+    index=default_index,
     key="sup_city"
 )
 city_key = None
@@ -39,7 +42,9 @@ with col1:
             .encode(
                 x=alt.X("host_segment:N", title="", axis=alt.Axis(labelAngle=0)),
                 y=alt.Y("median_price_usd:Q", title="Median Price (USD)"),
-                color=alt.Color("host_segment:N", legend=None, scale=alt.Scale(scheme="set2")),
+                color=alt.Color(
+                    "host_segment:N", legend=None, scale=alt.Scale(scheme="set2")
+                ),
                 tooltip=[
                     "host_segment",
                     "listing_count",
@@ -66,7 +71,9 @@ with col1:
 
 with col2:
     st.subheader("Seasonal Yield Curves & Forward Demand")
-    st.markdown("Dynamic constraint tracking from forward calendar availability (next 365 days).")
+    st.markdown(
+        "Dynamic constraint tracking from forward calendar availability (next 365 days)."
+    )
     with st.spinner("Querying millions of calendar records for temporal trends..."):
         df_temporal = fetch_temporal_trends(city_key)
 
@@ -90,14 +97,20 @@ with col2:
             y=alt.Y("booked_occupancy_rate:Q", title="Booked Occupancy (%)"),
             tooltip=[
                 alt.Tooltip("date:T", title="Date"),
-                alt.Tooltip("booked_occupancy_rate:Q", title="Occupancy", format=".1f%"),
+                alt.Tooltip(
+                    "booked_occupancy_rate:Q", title="Occupancy", format=".1f%"
+                ),
             ],
         )
 
         chart = (
-            alt.layer(area_occ, line_price).resolve_scale(y="independent").properties(height=450)
+            alt.layer(area_occ, line_price)
+            .resolve_scale(y="independent")
+            .properties(height=450)
         )
 
         st.altair_chart(chart, use_container_width=True)
     else:
-        st.warning("⚠️ No forward calendar demand data available for the selected market. Run the calendar ingest/model pipelines to generate predictions.")
+        st.warning(
+            "⚠️ No forward calendar demand data available for the selected market. Run the calendar ingest/model pipelines to generate predictions."
+        )

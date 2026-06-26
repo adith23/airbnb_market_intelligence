@@ -1,6 +1,6 @@
 """Pipeline metadata, lineage, and incremental-processing support.
 
-Section 3.5 stores operational metadata in the same DuckDB database used
+Stores operational metadata in the same DuckDB database used
 for the analytical model. The metadata tables are intentionally small and
 append-friendly:
 

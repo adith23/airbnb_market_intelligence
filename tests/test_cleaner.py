@@ -24,11 +24,8 @@ from src.platform.data_engineering.ingestion.cleaner import (
     _strip_html_column,
 )
 
-# ===================================================================
+
 # Price cleaning
-# ===================================================================
-
-
 class TestCleanPriceColumns:
     def test_usd_prices(self):
         df = pl.DataFrame({"price": ["$100.00", "$1,250.00", "$0.00"]})
@@ -60,11 +57,7 @@ class TestCleanPriceColumns:
         assert "other" in result.columns
 
 
-# ===================================================================
 # Boolean casting
-# ===================================================================
-
-
 class TestCastBooleanColumns:
     def test_standard_values(self):
         df = pl.DataFrame({"flag": ["t", "f", "t"]})
@@ -92,11 +85,7 @@ class TestCastBooleanColumns:
         assert result["b"].to_list() == [False, True]
 
 
-# ===================================================================
 # Date parsing
-# ===================================================================
-
-
 class TestParseDateColumns:
     def test_valid_dates(self):
         df = pl.DataFrame({"date": ["2024-01-15", "2024-12-31"]})
@@ -116,11 +105,7 @@ class TestParseDateColumns:
         assert result["date"][1] is None
 
 
-# ===================================================================
 # Percentage cleaning
-# ===================================================================
-
-
 class TestCleanPercentageColumns:
     def test_standard_pct(self):
         df = pl.DataFrame({"rate": ["95%", "100%", "0%"]})
@@ -136,11 +121,7 @@ class TestCleanPercentageColumns:
         assert result["rate"][1] is None
 
 
-# ===================================================================
 # Bathrooms parsing
-# ===================================================================
-
-
 class TestParseBathroomsColumn:
     def test_numeric_baths(self):
         df = pl.DataFrame({"bathrooms_text": ["1.5 baths", "2 baths"]})
@@ -170,11 +151,7 @@ class TestParseBathroomsColumn:
         assert "bathrooms" not in result.columns
 
 
-# ===================================================================
 # Amenity counting
-# ===================================================================
-
-
 class TestCountAmenities:
     def test_json_array(self):
         df = pl.DataFrame({"amenities": ['["Wifi","Kitchen","Pool"]']})
@@ -192,11 +169,7 @@ class TestCountAmenities:
         assert result["amenity_count"][0] == 0
 
 
-# ===================================================================
 # HTML stripping
-# ===================================================================
-
-
 class TestStripHtmlColumn:
     def test_basic_html(self):
         df = pl.DataFrame({"text": ["<b>Hello</b> world"]})
@@ -214,11 +187,7 @@ class TestStripHtmlColumn:
         assert "other" in result.columns
 
 
-# ===================================================================
 # Text normalization
-# ===================================================================
-
-
 class TestNormalizeTextColumns:
     def test_whitespace_stripping(self):
         df = pl.DataFrame({"type": ["  Studio  ", "Apartment"]})
@@ -231,11 +200,7 @@ class TestNormalizeTextColumns:
         assert result["type"][0] == "Entire home"
 
 
-# ===================================================================
 # Missing value strategies
-# ===================================================================
-
-
 class TestApplyMissingStrategies:
     def test_sentinel_fill(self):
         df = pl.DataFrame({"name": ["Alice", None, "Bob"]})
@@ -263,11 +228,7 @@ class TestApplyMissingStrategies:
         assert result["count"].to_list() == [5, 0, 3]
 
 
-# ===================================================================
 # Validation flags
-# ===================================================================
-
-
 class TestComputeValidationFlags:
     def test_all_valid(self):
         df = pl.DataFrame({"price": [100.0, 50.0]})
@@ -302,7 +263,9 @@ class TestComputeValidationFlags:
 
     def test_enum_flagged(self):
         df = pl.DataFrame({"room": ["Private room", "Unknown type"]})
-        rules = {"room": [{"check": "enum", "values": ["Private room", "Entire home/apt"]}]}
+        rules = {
+            "room": [{"check": "enum", "values": ["Private room", "Entire home/apt"]}]
+        }
         result = _compute_validation_flags(df, rules)
         assert result["_is_valid"][0] is True
         assert result["_is_valid"][1] is False

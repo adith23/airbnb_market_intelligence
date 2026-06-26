@@ -32,9 +32,12 @@ st.title("🏠 Market Overview & Geospatial Intelligence")
 # Global Filters
 st.sidebar.header("Filters")
 cities_map = fetch_available_cities()
+options = ["All Cities"] + list(cities_map.values())
+default_index = options.index("New York City") if "New York City" in options else 0
 selected_city_name = st.sidebar.selectbox(
     "Select Market",
-    options=["All Cities"] + list(cities_map.values()),
+    options=options,
+    index=default_index,
 )
 
 # Determine query key

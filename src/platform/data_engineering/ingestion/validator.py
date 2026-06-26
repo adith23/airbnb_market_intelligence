@@ -33,11 +33,7 @@ from src.platform.common.utils import (
 logger = logging.getLogger(__name__)
 
 
-# ===================================================================
 # Rule loading
-# ===================================================================
-
-
 def load_validation_rules(file_type: str | None = None) -> dict[str, Any]:
     """Load validation rules from config/validation_rules.yaml.
 
@@ -56,11 +52,7 @@ def load_validation_rules(file_type: str | None = None) -> dict[str, Any]:
     return rules
 
 
-# ===================================================================
 # Column-level validation
-# ===================================================================
-
-
 def validate_column(
     series: pl.Series,
     col_name: str,
@@ -174,7 +166,9 @@ def validate_column(
         outside = non_null.filter(~non_null.is_in(enum_values)).len()
         if outside > 0:
             # Collect examples of unexpected values
-            unexpected = non_null.filter(~non_null.is_in(enum_values)).unique().head(5).to_list()
+            unexpected = (
+                non_null.filter(~non_null.is_in(enum_values)).unique().head(5).to_list()
+            )
             results["violations"].append(
                 {
                     "rule": "enum",
@@ -189,11 +183,7 @@ def validate_column(
     return results
 
 
-# ===================================================================
 # Duplicate detection
-# ===================================================================
-
-
 def detect_duplicates(
     df: pl.DataFrame,
     key_columns: list[str],
@@ -225,7 +215,9 @@ def detect_duplicates(
         "total_rows": df.height,
         "unique_keys": grouped.height,
         "duplicate_keys": dup_count,
-        "duplicate_rows": (int(duplicates["len"].sum() - dup_count) if dup_count > 0 else 0),
+        "duplicate_rows": (
+            int(duplicates["len"].sum() - dup_count) if dup_count > 0 else 0
+        ),
     }
 
     if dup_count > 0:
@@ -240,11 +232,7 @@ def detect_duplicates(
     return result
 
 
-# ===================================================================
 # Scraping artifact detection
-# ===================================================================
-
-
 def detect_scraping_artifacts(df: pl.DataFrame) -> dict[str, Any]:
     """Detect common web-scraping artifacts in a DataFrame.
 
@@ -262,7 +250,9 @@ def detect_scraping_artifacts(df: pl.DataFrame) -> dict[str, Any]:
     artifacts: list[dict[str, Any]] = []
 
     string_cols = [
-        col for col in df.columns if df[col].dtype == pl.Utf8 or df[col].dtype == pl.String
+        col
+        for col in df.columns
+        if df[col].dtype == pl.Utf8 or df[col].dtype == pl.String
     ]
 
     for col_name in string_cols:
@@ -297,11 +287,7 @@ def detect_scraping_artifacts(df: pl.DataFrame) -> dict[str, Any]:
     }
 
 
-# ===================================================================
 # Coverage assessment
-# ===================================================================
-
-
 def assess_coverage(
     df: pl.DataFrame,
     file_type: str,
@@ -352,14 +338,20 @@ def _assess_listings_coverage(df: pl.DataFrame) -> dict[str, Any]:
 
     if "host_id" in df.columns:
         result["unique_hosts"] = df["host_id"].n_unique()
-        result["listings_per_host_mean"] = round(df.height / df["host_id"].n_unique(), 2)
+        result["listings_per_host_mean"] = round(
+            df.height / df["host_id"].n_unique(), 2
+        )
 
     if "price" in df.columns:
-        result["price_fill_rate_pct"] = round((1 - df["price"].null_count() / df.height) * 100, 2)
+        result["price_fill_rate_pct"] = round(
+            (1 - df["price"].null_count() / df.height) * 100, 2
+        )
 
     if "last_review" in df.columns:
         non_null_reviews = df["last_review"].drop_nulls()
-        result["listings_with_reviews_pct"] = round(non_null_reviews.len() / df.height * 100, 2)
+        result["listings_with_reviews_pct"] = round(
+            non_null_reviews.len() / df.height * 100, 2
+        )
 
     return result
 
@@ -398,8 +390,12 @@ def _assess_calendar_coverage(df: pl.DataFrame) -> dict[str, Any]:
 
         total = available_count + unavailable_count
         result["availability"] = {
-            "available_pct": (round(available_count / total * 100, 2) if total > 0 else 0),
-            "unavailable_pct": (round(unavailable_count / total * 100, 2) if total > 0 else 0),
+            "available_pct": (
+                round(available_count / total * 100, 2) if total > 0 else 0
+            ),
+            "unavailable_pct": (
+                round(unavailable_count / total * 100, 2) if total > 0 else 0
+            ),
         }
 
     return result
@@ -433,11 +429,7 @@ def _assess_reviews_coverage(df: pl.DataFrame) -> dict[str, Any]:
     return result
 
 
-# ===================================================================
 # Full quality report generation
-# ===================================================================
-
-
 def generate_quality_report(city_name: str) -> dict[str, Any]:
     """Generate a comprehensive data quality report for a city.
 
@@ -503,7 +495,9 @@ def generate_quality_report(city_name: str) -> dict[str, Any]:
         column_validations: dict[str, Any] = {}
         for col_name, col_rules in rules.items():
             if col_name in df.columns:
-                column_validations[col_name] = validate_column(df[col_name], col_name, col_rules)
+                column_validations[col_name] = validate_column(
+                    df[col_name], col_name, col_rules
+                )
             else:
                 column_validations[col_name] = {
                     "column": col_name,
@@ -524,13 +518,16 @@ def generate_quality_report(city_name: str) -> dict[str, Any]:
 
         # Summary
         total_rules = len(column_validations)
-        passed_rules = sum(1 for v in column_validations.values() if v.get("passed", False))
+        passed_rules = sum(
+            1 for v in column_validations.values() if v.get("passed", False)
+        )
         file_report["summary"] = {
             "rules_checked": total_rules,
             "rules_passed": passed_rules,
             "rules_failed": total_rules - passed_rules,
             "has_duplicates": file_report["duplicates"].get("duplicate_keys", 0) > 0,
-            "has_artifacts": file_report["scraping_artifacts"]["columns_with_artifacts"] > 0,
+            "has_artifacts": file_report["scraping_artifacts"]["columns_with_artifacts"]
+            > 0,
         }
 
         file_reports[filepath.name] = file_report
