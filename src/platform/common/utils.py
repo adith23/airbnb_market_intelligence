@@ -24,9 +24,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
 # Compiled regex patterns (module-level for performance)
-# ---------------------------------------------------------------------------
 CURRENCY_SYMBOL_RE = re.compile(r"[\$€£,]")
 NUMERIC_EXTRACT_RE = re.compile(r"(\d+\.?\d*)")
 HTML_TAG_RE = re.compile(r"<[^>]+>")
@@ -49,11 +47,7 @@ else:
     OUTPUT_DIR = ROOT_DIR / "outputs"
 
 
-# ===================================================================
 # Logging
-# ===================================================================
-
-
 def setup_logging(level: int = logging.INFO) -> None:
     """Configure structured logging for the entire pipeline.
 
@@ -67,11 +61,7 @@ def setup_logging(level: int = logging.INFO) -> None:
     )
 
 
-# ===================================================================
 # Configuration loaders
-# ===================================================================
-
-
 def load_yaml_config(path: str | Path) -> dict:
     """Load and parse a YAML configuration file.
 
@@ -122,11 +112,7 @@ def load_city_config(city_name: str | None = None) -> dict:
     return cities[city_key]
 
 
-# ===================================================================
 # Price parsing
-# ===================================================================
-
-
 def clean_price(value: str | None) -> float | None:
     """Parse a price string into a float value.
 
@@ -185,11 +171,7 @@ def detect_price_currency(value: str | None) -> str | None:
     return None
 
 
-# ===================================================================
 # Boolean parsing
-# ===================================================================
-
-
 def parse_boolean(value: str | None) -> bool | None:
     """Convert Airbnb's 't'/'f' string encoding to Python bool.
 
@@ -211,11 +193,7 @@ def parse_boolean(value: str | None) -> bool | None:
     return BOOLEAN_MAP.get(value.strip().lower())
 
 
-# ===================================================================
 # Amenities parsing
-# ===================================================================
-
-
 def parse_amenities(value: str | None) -> list[str]:
     """Parse amenities from a stringified JSON array or set notation.
 
@@ -262,11 +240,7 @@ def parse_amenities(value: str | None) -> list[str]:
     return []
 
 
-# ===================================================================
 # Bathrooms text parsing
-# ===================================================================
-
-
 def parse_bathrooms_text(value: str | None) -> tuple[float | None, bool]:
     """Extract numeric bathroom count and shared flag from text.
 
@@ -308,11 +282,7 @@ def parse_bathrooms_text(value: str | None) -> tuple[float | None, bool]:
     return None, is_shared
 
 
-# ===================================================================
 # Percentage rate parsing
-# ===================================================================
-
-
 def parse_rate_pct(value: str | None) -> float | None:
     """Parse percentage strings into proportions (0.0–1.0).
 
@@ -341,11 +311,7 @@ def parse_rate_pct(value: str | None) -> float | None:
         return None
 
 
-# ===================================================================
 # Host verifications parsing
-# ===================================================================
-
-
 def parse_host_verifications(value: str | None) -> list[str]:
     """Parse host verifications from a stringified Python list.
 
@@ -376,11 +342,7 @@ def parse_host_verifications(value: str | None) -> list[str]:
     return sorted(items)
 
 
-# ===================================================================
 # Text cleaning
-# ===================================================================
-
-
 def strip_html(text: str | None) -> str | None:
     """Remove HTML tags and decode common entities from text fields.
 
@@ -411,11 +373,7 @@ def strip_html(text: str | None) -> str | None:
     return result.strip() or None
 
 
-# ===================================================================
 # Schema utilities
-# ===================================================================
-
-
 def compute_schema_hash(columns: list[str]) -> str:
     """Compute a deterministic hash of column names for drift detection.
 
@@ -436,10 +394,7 @@ def compute_schema_hash(columns: list[str]) -> str:
     return hashlib.md5(signature.encode("utf-8")).hexdigest()
 
 
-# ===================================================================
 # File type inference
-# ===================================================================
-
 # Mapping of filename stems to logical file types
 _FILE_TYPE_MAP: dict[str, str] = {
     "listings": "listings",
@@ -473,11 +428,7 @@ def infer_file_type(filepath: str | Path) -> str:
     return _FILE_TYPE_MAP.get(stem.lower(), "unknown")
 
 
-# ===================================================================
 # Directory helpers
-# ===================================================================
-
-
 def ensure_dirs(*dirs: Path) -> None:
     """Create directories if they don't exist.
 

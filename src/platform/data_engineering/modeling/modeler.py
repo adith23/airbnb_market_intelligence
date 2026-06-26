@@ -1,4 +1,4 @@
-"""DuckDB star-schema builder for Section 3.4.
+"""DuckDB star-schema builder.
 
 The modeler loads enriched master listings plus cleaned staging event
 tables into an analytics-ready dimensional model:
@@ -176,7 +176,7 @@ def _create_parquet_view(
             f"""
             CREATE OR REPLACE TEMP VIEW {view_name} AS
             SELECT
-                regexp_extract(filename, 'staging/([^/]+)/[^/]+\\.parquet', 1) AS city,
+                regexp_extract(replace(filename, '\\\\', '/'), 'staging/([^/]+)/[^/]+\\.parquet', 1) AS city,
                 * EXCLUDE (filename)
             FROM {source}
             """

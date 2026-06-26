@@ -1,6 +1,6 @@
 import streamlit as st
 
-from src.platform.mlops.serving.ml_client import predict_price
+from dashboard.backend.ml_service import predict_price
 
 st.set_page_config(page_title="Price Estimator", page_icon="🤖", layout="wide")
 
@@ -16,7 +16,9 @@ col1, col2 = st.columns([1, 2])
 with col1:
     st.subheader("Property Configuration")
     with st.container(border=True):
-        city = st.selectbox("City Context", ["Paris", "New York City", "Barcelona", "Amsterdam"])
+        city_options = ["Paris", "New York City", "Barcelona", "Amsterdam"]
+        default_idx = city_options.index("New York City") if "New York City" in city_options else 0
+        city = st.selectbox("City Context", city_options, index=default_idx)
         room_type = st.selectbox(
             "Room Type",
             ["Entire home/apt", "Private room", "Hotel room", "Shared room"],

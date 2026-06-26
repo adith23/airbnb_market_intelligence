@@ -1,7 +1,7 @@
 import streamlit as st
 
 from dashboard.backend.shap_explainer import render_shap_waterfall
-from src.platform.mlops.serving.ml_client import build_feature_vector, load_models
+from dashboard.backend.ml_service import build_feature_vector, load_models
 
 st.set_page_config(page_title="Explainability & ROI", page_icon="🔍", layout="wide")
 st.title("🔍 Explainability & Amenity ROI")

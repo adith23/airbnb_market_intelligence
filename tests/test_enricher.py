@@ -1,4 +1,4 @@
-"""Tests for Section 3.3 enrichment and joining."""
+"""Tests enrichment and joining."""
 
 from __future__ import annotations
 

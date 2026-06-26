@@ -23,6 +23,10 @@ build/
 venv/
 env/
 
+# Environment variables
+.env
+.env.*
+
 # IDE
 .vscode/
 .idea/
@@ -48,3 +52,10 @@ Thumbs.db
 *.tfstate.backup
 .terraform.lock.hcl
 .terraform.tfstate.lock.info
+
+# Testing and Linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.mypy_cache/

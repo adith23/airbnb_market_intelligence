@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import shap
 import streamlit as st
 
-from src.platform.mlops.serving.ml_client import load_models
+from dashboard.backend.ml_service import load_models
 
 
 @st.cache_resource

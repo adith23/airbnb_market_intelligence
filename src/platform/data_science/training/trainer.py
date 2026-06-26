@@ -31,11 +31,7 @@ logger = logging.getLogger(__name__)
 MODELS_DIR = DATA_DIR / "models"
 
 
-# ===================================================================
 # Data Classes
-# ===================================================================
-
-
 @dataclass
 class CVResult:
     """Cross-validation results for a single model."""
@@ -73,11 +69,7 @@ class ExperimentResult:
     config_snapshot: dict
 
 
-# ===================================================================
 # Experiment ID Generation
-# ===================================================================
-
-
 def _generate_experiment_id(config: dict) -> str:
     """Create a unique experiment ID from timestamp + config hash."""
     timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
@@ -86,11 +78,7 @@ def _generate_experiment_id(config: dict) -> str:
     return f"{timestamp}_{config_hash}"
 
 
-# ===================================================================
 # Model Instantiation
-# ===================================================================
-
-
 def _create_model(model_name: str, model_config: dict, params: dict | None = None) -> Any:
     """Instantiate a scikit-learn compatible model.
 
@@ -132,11 +120,7 @@ def _create_model(model_name: str, model_config: dict, params: dict | None = Non
     raise ValueError(f"Unknown model family: {model_name}")
 
 
-# ===================================================================
 # Cross-Validation
-# ===================================================================
-
-
 def _compute_fold_metrics(
     y_true: np.ndarray, y_pred: np.ndarray, log_target: bool
 ) -> dict[str, float]:
@@ -237,11 +221,7 @@ def cross_validate_model(
     return CVResult(fold_metrics=fold_metrics, mean_metrics=mean_m, std_metrics=std_m)
 
 
-# ===================================================================
 # Hyperparameter Tuning
-# ===================================================================
-
-
 def _tune_hyperparameters(
     model_name: str,
     model_config: dict,
@@ -318,11 +298,7 @@ def _tune_hyperparameters(
     return search.best_estimator_, search.best_params_
 
 
-# ===================================================================
 # Single Model Training
-# ===================================================================
-
-
 def train_single_model(
     model_name: str,
     X_train: pd.DataFrame,
@@ -374,11 +350,7 @@ def train_single_model(
     )
 
 
-# ===================================================================
 # Quantile Regression
-# ===================================================================
-
-
 def train_quantile_models(
     X_train: pd.DataFrame,
     y_train: pd.Series,
@@ -438,11 +410,7 @@ def train_quantile_models(
     return models
 
 
-# ===================================================================
 # Model Persistence
-# ===================================================================
-
-
 def save_experiment(result: ExperimentResult) -> Path:
     """Save all experiment artifacts to disk.
 
@@ -532,11 +500,7 @@ def load_experiment(experiment_id: str) -> tuple[dict[str, Any], list[str], Path
     return models, feature_columns, exp_dir
 
 
-# ===================================================================
 # Main Entry Point
-# ===================================================================
-
-
 def train_experiment(
     feature_set: Any,
     split: Any,

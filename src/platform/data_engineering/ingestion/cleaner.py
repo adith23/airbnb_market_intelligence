@@ -1,4 +1,4 @@
-"""Data cleaning and standardization pipeline (Section 3.2).
+"""Data cleaning and standardization pipeline.
 
 Transforms raw CSV/GZ files from the landing zone into clean, typed,
 validated Parquet files in the staging zone. Each file type has a
@@ -50,11 +50,7 @@ logger = logging.getLogger(__name__)
 _SCHEMA_INFERENCE_ROWS = 10_000
 
 
-# ===================================================================
 # Result data class
-# ===================================================================
-
-
 @dataclass
 class CleaningResult:
     """Result of cleaning a single file type for a city."""
@@ -71,11 +67,7 @@ class CleaningResult:
     imputed_columns: list[str] = field(default_factory=list)
 
 
-# ===================================================================
 # Configuration loading
-# ===================================================================
-
-
 def _load_cleaning_config(file_type: str) -> dict[str, Any]:
     """Load cleaning rules for a specific file type.
 
@@ -99,11 +91,7 @@ def _load_cleaning_config(file_type: str) -> dict[str, Any]:
     return config[file_type]
 
 
-# ===================================================================
 # Type coercion — vectorized Polars expressions
-# ===================================================================
-
-
 def _clean_price_columns(df: pl.DataFrame, columns: list[str]) -> pl.DataFrame:
     """Strip currency symbols and cast price strings to Float64.
 
@@ -173,7 +161,6 @@ def _parse_date_columns(df: pl.DataFrame, columns: list[str]) -> pl.DataFrame:
     for col in columns:
         if col not in df.columns:
             continue
-        # Only parse if column is currently string type
         if df[col].dtype in (pl.Utf8, pl.String):
             exprs.append(pl.col(col).str.to_date("%Y-%m-%d", strict=False).alias(col))
 
@@ -197,20 +184,18 @@ def _clean_percentage_columns(df: pl.DataFrame, columns: list[str]) -> pl.DataFr
         if col not in df.columns:
             continue
         exprs.append(
-            pl.col(col).str.replace("%", "").str.strip_chars().cast(pl.Float64, strict=False)
+            pl.col(col)
+            .str.replace("%", "")
+            .str.strip_chars()
+            .cast(pl.Float64, strict=False)
             / 100.0
         )
-        # Polars requires explicit alias after arithmetic
         exprs[-1] = exprs[-1].alias(col)
 
     return df.with_columns(exprs) if exprs else df
 
 
-# ===================================================================
 # Special column parsing — vectorized
-# ===================================================================
-
-
 def _parse_bathrooms_column(df: pl.DataFrame) -> pl.DataFrame:
     """Parse bathrooms_text into numeric bathrooms + shared flag.
 
@@ -232,14 +217,12 @@ def _parse_bathrooms_column(df: pl.DataFrame) -> pl.DataFrame:
 
     lowered = pl.col("bathrooms_text").str.to_lowercase()
 
-    # Extract numeric value from text
     numeric_expr = (
         pl.col("bathrooms_text")
         .str.extract(r"(\d+\.?\d*)", group_index=1)
         .cast(pl.Float64, strict=False)
     )
 
-    # Handle "half-bath" patterns without numeric prefix
     bathrooms_expr = (
         pl.when(numeric_expr.is_not_null())
         .then(numeric_expr)
@@ -249,7 +232,6 @@ def _parse_bathrooms_column(df: pl.DataFrame) -> pl.DataFrame:
         .alias("bathrooms")
     )
 
-    # Detect shared bathrooms
     shared_expr = (
         pl.when(pl.col("bathrooms_text").is_not_null())
         .then(lowered.str.contains("shared"))
@@ -362,16 +344,14 @@ def _apply_special_columns(
         elif method == "strip_html":
             df = _strip_html_column(df, col_name)
         else:
-            logger.warning("Unknown special parsing method: %s for column %s", method, col_name)
+            logger.warning(
+                "Unknown special parsing method: %s for column %s", method, col_name
+            )
 
     return df
 
 
-# ===================================================================
 # Text normalization
-# ===================================================================
-
-
 def _normalize_text_columns(df: pl.DataFrame, columns: list[str]) -> pl.DataFrame:
     """Normalize text columns: strip whitespace, standardize casing.
 
@@ -401,11 +381,7 @@ def _normalize_text_columns(df: pl.DataFrame, columns: list[str]) -> pl.DataFram
     return df.with_columns(exprs) if exprs else df
 
 
-# ===================================================================
 # Missing value strategies
-# ===================================================================
-
-
 def _apply_missing_strategies(
     df: pl.DataFrame,
     strategies: dict[str, Any],
@@ -443,7 +419,9 @@ def _apply_missing_strategies(
 
         elif strategy == "sentinel":
             fill_value = spec.get("fill_value", "Unknown")
-            df = df.with_columns(pl.col(col_name).fill_null(pl.lit(fill_value)).alias(col_name))
+            df = df.with_columns(
+                pl.col(col_name).fill_null(pl.lit(fill_value)).alias(col_name)
+            )
             logger.debug("Sentinel fill: %s → '%s'", col_name, fill_value)
 
         elif strategy == "impute_zero":
@@ -458,7 +436,9 @@ def _apply_missing_strategies(
                 median_val = df[col_name].median()
                 if median_val is not None:
                     # Add imputed flag BEFORE filling
-                    df = df.with_columns(pl.col(col_name).is_null().alias(f"_{col_name}_imputed"))
+                    df = df.with_columns(
+                        pl.col(col_name).is_null().alias(f"_{col_name}_imputed")
+                    )
                     df = df.with_columns(
                         pl.col(col_name).fill_null(pl.lit(median_val)).alias(col_name)
                     )
@@ -474,7 +454,9 @@ def _apply_missing_strategies(
             )
 
             # Mark which rows will be imputed (BEFORE filling)
-            df = df.with_columns(pl.col(col_name).is_null().alias(f"_{col_name}_imputed"))
+            df = df.with_columns(
+                pl.col(col_name).is_null().alias(f"_{col_name}_imputed")
+            )
 
             # Join group medians and fill nulls
             df = df.join(group_medians, on=available_group_cols, how="left")
@@ -496,16 +478,14 @@ def _apply_missing_strategies(
             )
 
         else:
-            logger.warning("Unknown missing value strategy: %s for %s", strategy, col_name)
+            logger.warning(
+                "Unknown missing value strategy: %s for %s", strategy, col_name
+            )
 
     return df, imputed_columns
 
 
-# ===================================================================
 # Post-cleaning validation flags
-# ===================================================================
-
-
 def _compute_validation_flags(
     df: pl.DataFrame,
     rules_config: dict[str, list[dict[str, Any]]],
@@ -544,7 +524,9 @@ def _compute_validation_flags(
             elif check == "positive":
                 if df[col_name].dtype.is_numeric():
                     flag_exprs.append(
-                        pl.when(pl.col(col_name).is_not_null() & (pl.col(col_name) <= 0))
+                        pl.when(
+                            pl.col(col_name).is_not_null() & (pl.col(col_name) <= 0)
+                        )
                         .then(pl.lit(flag_id))
                         .otherwise(pl.lit(""))
                         .alias(f"__vf_{flag_id}")
@@ -576,7 +558,10 @@ def _compute_validation_flags(
                 allowed = rule.get("values", [])
                 if allowed:
                     flag_exprs.append(
-                        pl.when(pl.col(col_name).is_not_null() & ~pl.col(col_name).is_in(allowed))
+                        pl.when(
+                            pl.col(col_name).is_not_null()
+                            & ~pl.col(col_name).is_in(allowed)
+                        )
                         .then(pl.lit(flag_id))
                         .otherwise(pl.lit(""))
                         .alias(f"__vf_{flag_id}")
@@ -609,11 +594,7 @@ def _compute_validation_flags(
     return df
 
 
-# ===================================================================
 # Partitioning and output
-# ===================================================================
-
-
 def _partition_and_save(
     df: pl.DataFrame,
     city_name: str,
@@ -660,11 +641,7 @@ def _partition_and_save(
     return output_path, rejected_path, valid_count, rejected_count
 
 
-# ===================================================================
 # Per-file-type cleaning orchestrators
-# ===================================================================
-
-
 def _read_raw_file(city_name: str, file_type: str) -> tuple[Path, pl.DataFrame]:
     """Find and read the raw file for a given city and file type.
 
@@ -689,7 +666,9 @@ def _read_raw_file(city_name: str, file_type: str) -> tuple[Path, pl.DataFrame]:
     candidates = sorted(raw_dir.glob(f"{file_type}*"), reverse=True)
     gz_files = [f for f in candidates if f.name.endswith(".csv.gz")]
     csv_files = [
-        f for f in candidates if f.name.endswith(".csv") and not f.name.endswith(".csv.gz")
+        f
+        for f in candidates
+        if f.name.endswith(".csv") and not f.name.endswith(".csv.gz")
     ]
 
     filepath = gz_files[0] if gz_files else (csv_files[0] if csv_files else None)
@@ -736,53 +715,53 @@ def clean_listings(city_name: str) -> CleaningResult:
     input_rows = df.height
     columns_cleaned: dict[str, str] = {}
 
-    # 1. Price columns
+    # Price columns
     price_cols = config.get("price_columns", [])
     df = _clean_price_columns(df, price_cols)
     for c in price_cols:
         if c in df.columns:
             columns_cleaned[c] = "price→float64"
 
-    # 2. Boolean columns
+    # Boolean columns
     bool_cols = config.get("boolean_columns", [])
     df = _cast_boolean_columns(df, bool_cols)
     for c in bool_cols:
         if c in df.columns:
             columns_cleaned[c] = "t/f→boolean"
 
-    # 3. Date columns
+    # Date columns
     date_cols = config.get("date_columns", [])
     df = _parse_date_columns(df, date_cols)
     for c in date_cols:
         if c in df.columns:
             columns_cleaned[c] = "string→date"
 
-    # 4. Percentage columns
+    # Percentage columns
     pct_cols = config.get("percentage_columns", [])
     df = _clean_percentage_columns(df, pct_cols)
     for c in pct_cols:
         if c in df.columns:
             columns_cleaned[c] = "pct_string→proportion"
 
-    # 5. Special column parsing
+    # Special column parsing
     special = config.get("special_columns", {})
     df = _apply_special_columns(df, special)
     for c in special:
         if c in df.columns:
             columns_cleaned[c] = f"special:{special[c]}"
 
-    # 6. Text normalization
+    # Text normalization
     text_cols = config.get("text_normalize_columns", [])
     df = _normalize_text_columns(df, text_cols)
     for c in text_cols:
         if c in df.columns:
             columns_cleaned[c] = "text_normalized"
 
-    # 7. Missing value strategies
+    # Missing value strategies
     strategies = config.get("missing_value_strategies", {})
     df, imputed_cols = _apply_missing_strategies(df, strategies)
 
-    # 8. Validation flags & partitioning
+    # Validation flags & partitioning
     validation_rules = config.get("validation_rules", {})
     df = _compute_validation_flags(df, validation_rules)
 
@@ -833,32 +812,32 @@ def clean_calendar(city_name: str) -> CleaningResult:
     input_rows = df.height
     columns_cleaned: dict[str, str] = {}
 
-    # 1. Price columns
+    # Price columns
     price_cols = config.get("price_columns", [])
     df = _clean_price_columns(df, price_cols)
     for c in price_cols:
         if c in df.columns:
             columns_cleaned[c] = "price→float64"
 
-    # 2. Boolean columns
+    # Boolean columns
     bool_cols = config.get("boolean_columns", [])
     df = _cast_boolean_columns(df, bool_cols)
     for c in bool_cols:
         if c in df.columns:
             columns_cleaned[c] = "t/f→boolean"
 
-    # 3. Date columns
+    # Date columns
     date_cols = config.get("date_columns", [])
     df = _parse_date_columns(df, date_cols)
     for c in date_cols:
         if c in df.columns:
             columns_cleaned[c] = "string→date"
 
-    # 4. Missing value strategies
+    # Missing value strategies
     strategies = config.get("missing_value_strategies", {})
     df, imputed_cols = _apply_missing_strategies(df, strategies)
 
-    # 5. Validation flags & partitioning
+    # Validation flags & partitioning
     validation_rules = config.get("validation_rules", {})
     df = _compute_validation_flags(df, validation_rules)
 
@@ -905,25 +884,25 @@ def clean_reviews(city_name: str) -> CleaningResult:
     input_rows = df.height
     columns_cleaned: dict[str, str] = {}
 
-    # 1. Date columns
+    # Date columns
     date_cols = config.get("date_columns", [])
     df = _parse_date_columns(df, date_cols)
     for c in date_cols:
         if c in df.columns:
             columns_cleaned[c] = "string→date"
 
-    # 2. Special columns (HTML stripping)
+    # Special columns (HTML stripping)
     special = config.get("special_columns", {})
     df = _apply_special_columns(df, special)
     for c in special:
         if c in df.columns:
             columns_cleaned[c] = f"special:{special[c]}"
 
-    # 3. Missing value strategies
+    # Missing value strategies
     strategies = config.get("missing_value_strategies", {})
     df, imputed_cols = _apply_missing_strategies(df, strategies)
 
-    # 4. Validation flags & partitioning
+    # Validation flags & partitioning
     validation_rules = config.get("validation_rules", {})
     df = _compute_validation_flags(df, validation_rules)
 
@@ -969,18 +948,18 @@ def clean_neighbourhoods(city_name: str) -> CleaningResult:
     input_rows = df.height
     columns_cleaned: dict[str, str] = {}
 
-    # 1. Text normalization
+    # Text normalization
     text_cols = config.get("text_normalize_columns", [])
     df = _normalize_text_columns(df, text_cols)
     for c in text_cols:
         if c in df.columns:
             columns_cleaned[c] = "text_normalized"
 
-    # 2. Missing value strategies
+    # Missing value strategies
     strategies = config.get("missing_value_strategies", {})
     df, imputed_cols = _apply_missing_strategies(df, strategies)
 
-    # 3. Validation flags & partitioning
+    # Validation flags & partitioning
     validation_rules = config.get("validation_rules", {})
     df = _compute_validation_flags(df, validation_rules)
 
@@ -1009,10 +988,7 @@ def clean_neighbourhoods(city_name: str) -> CleaningResult:
     )
 
 
-# ===================================================================
 # City-level orchestrator
-# ===================================================================
-
 # Mapping of file types to their cleaning functions
 _CLEANERS: dict[str, Any] = {
     "listings": clean_listings,

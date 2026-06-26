@@ -21,11 +21,8 @@ from src.platform.common.utils import (
     strip_html,
 )
 
-# ===================================================================
+
 # clean_price
-# ===================================================================
-
-
 class TestCleanPrice:
     def test_usd_format(self):
         assert clean_price("$1,250.00") == 1250.0
@@ -55,11 +52,7 @@ class TestCleanPrice:
         assert clean_price(123) is None
 
 
-# ===================================================================
 # parse_boolean
-# ===================================================================
-
-
 class TestParseBoolean:
     def test_true(self):
         assert parse_boolean("t") is True
@@ -83,11 +76,7 @@ class TestParseBoolean:
         assert parse_boolean(" t ") is True
 
 
-# ===================================================================
 # parse_amenities
-# ===================================================================
-
-
 class TestParseAmenities:
     def test_json_array(self):
         result = parse_amenities('["Wifi", "Kitchen", "Pool"]')
@@ -111,11 +100,7 @@ class TestParseAmenities:
         assert result == ["Wifi"]
 
 
-# ===================================================================
 # parse_bathrooms_text
-# ===================================================================
-
-
 class TestParseBathroomsText:
     def test_numeric(self):
         assert parse_bathrooms_text("1.5 baths") == (1.5, False)
@@ -144,11 +129,7 @@ class TestParseBathroomsText:
         assert shared is False
 
 
-# ===================================================================
 # parse_rate_pct
-# ===================================================================
-
-
 class TestParseRatePct:
     def test_normal(self):
         assert parse_rate_pct("95%") == 0.95
@@ -172,11 +153,7 @@ class TestParseRatePct:
         assert parse_rate_pct(" 80% ") == 0.8
 
 
-# ===================================================================
 # parse_host_verifications
-# ===================================================================
-
-
 class TestParseHostVerifications:
     def test_standard_list(self):
         result = parse_host_verifications("['email', 'phone', 'work_email']")
@@ -193,11 +170,7 @@ class TestParseHostVerifications:
         assert result == ["email"]
 
 
-# ===================================================================
 # detect_price_currency
-# ===================================================================
-
-
 class TestDetectPriceCurrency:
     def test_usd(self):
         assert detect_price_currency("$100.00") == "$"
@@ -215,11 +188,7 @@ class TestDetectPriceCurrency:
         assert detect_price_currency(None) is None
 
 
-# ===================================================================
 # strip_html
-# ===================================================================
-
-
 class TestStripHtml:
     def test_basic_tags(self):
         assert strip_html("<b>Hello</b> world") == "Hello world"
@@ -237,11 +206,7 @@ class TestStripHtml:
         assert strip_html("<br>") is None
 
 
-# ===================================================================
 # compute_schema_hash
-# ===================================================================
-
-
 class TestComputeSchemaHash:
     def test_deterministic(self):
         h1 = compute_schema_hash(["id", "name", "price"])
@@ -259,11 +224,7 @@ class TestComputeSchemaHash:
         assert h1 != h2
 
 
-# ===================================================================
 # infer_file_type
-# ===================================================================
-
-
 class TestInferFileType:
     def test_listings_csv(self):
         assert infer_file_type("listings.csv") == "listings"

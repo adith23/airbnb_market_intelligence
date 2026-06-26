@@ -31,11 +31,7 @@ from src.platform.common.utils import (
 logger = logging.getLogger(__name__)
 
 
-# ===================================================================
 # Schema loading from profiler outputs
-# ===================================================================
-
-
 def _load_city_schemas(city_name: str) -> dict[str, dict[str, Any]]:
     """Load profiled schemas for a city from outputs/schemas/.
 
@@ -67,11 +63,7 @@ def _load_city_schemas(city_name: str) -> dict[str, dict[str, Any]]:
     return schemas
 
 
-# ===================================================================
 # Schema comparison
-# ===================================================================
-
-
 def compare_schemas(
     city_schemas: dict[str, dict[str, dict[str, Any]]],
 ) -> dict[str, Any]:
@@ -200,11 +192,7 @@ def _compare_file_type_schemas(
     }
 
 
-# ===================================================================
 # Dataset metadata comparison
-# ===================================================================
-
-
 def compare_dataset_metadata(city_names: list[str]) -> dict[str, Any]:
     """Compare high-level dataset metadata across cities.
 
@@ -251,11 +239,7 @@ def compare_dataset_metadata(city_names: list[str]) -> dict[str, Any]:
     }
 
 
-# ===================================================================
 # Harmonization strategy documentation
-# ===================================================================
-
-
 def document_harmonization_strategy(
     schema_comparison: dict[str, Any],
     metadata_comparison: dict[str, Any],
@@ -282,7 +266,7 @@ def document_harmonization_strategy(
     """
     strategies: dict[str, Any] = {}
 
-    # 1. Column mapping strategy
+    # Column mapping strategy
     strategies["column_mapping"] = {
         "approach": "Canonical schema defined in config/schema_map.yaml",
         "rules": [
@@ -292,7 +276,7 @@ def document_harmonization_strategy(
         ],
     }
 
-    # 2. Type coercion strategy
+    # Type coercion strategy
     comparisons = schema_comparison.get("comparisons", {})
     type_issues = []
     for file_type, comp in comparisons.items():
@@ -316,7 +300,7 @@ def document_harmonization_strategy(
         ],
     }
 
-    # 3. Currency strategy
+    # Currency strategy
     metadata = metadata_comparison.get("metadata", {})
     currencies = {city: info.get("currency_code") for city, info in metadata.items()}
 
@@ -331,7 +315,7 @@ def document_harmonization_strategy(
         ],
     }
 
-    # 4. Missing column strategy
+    # Missing column strategy
     missing_cols: dict[str, Any] = {}
     for file_type, comp in comparisons.items():
         specific = comp.get("city_specific_columns", {})
@@ -348,7 +332,7 @@ def document_harmonization_strategy(
         ],
     }
 
-    # 5. Text encoding strategy
+    # Text encoding strategy
     strategies["text_encoding"] = {
         "approach": "Normalize all text to UTF-8 NFC",
         "rules": [
@@ -359,7 +343,7 @@ def document_harmonization_strategy(
         ],
     }
 
-    # 6. Metadata enrichment
+    # Metadata enrichment
     strategies["metadata_enrichment"] = {
         "approach": "Add city and scrape context columns",
         "columns_added": [
@@ -377,11 +361,7 @@ def document_harmonization_strategy(
     }
 
 
-# ===================================================================
 # Full harmonization report
-# ===================================================================
-
-
 def generate_harmonization_report(city_names: list[str]) -> dict[str, Any]:
     """Generate a complete cross-city harmonization report.
 
@@ -401,7 +381,9 @@ def generate_harmonization_report(city_names: list[str]) -> dict[str, Any]:
         ValueError: If fewer than 2 cities provided.
     """
     if len(city_names) < 2:
-        raise ValueError(f"Harmonization comparison requires at least 2 cities. Got: {city_names}")
+        raise ValueError(
+            f"Harmonization comparison requires at least 2 cities. Got: {city_names}"
+        )
 
     logger.info(
         "Generating harmonization report for %d cities: %s",
@@ -409,7 +391,7 @@ def generate_harmonization_report(city_names: list[str]) -> dict[str, Any]:
         city_names,
     )
 
-    # 1. Load schemas
+    # Load schemas
     all_schemas: dict[str, dict[str, dict[str, Any]]] = {}
     for city in city_names:
         try:
@@ -423,13 +405,13 @@ def generate_harmonization_report(city_names: list[str]) -> dict[str, Any]:
             "Run the profiler for each city first."
         )
 
-    # 2. Compare schemas
+    # Compare schemas
     schema_comparison = compare_schemas(all_schemas)
 
-    # 3. Compare metadata
+    # Compare metadata
     metadata_comparison = compare_dataset_metadata(city_names)
 
-    # 4. Document strategy
+    # Document strategy
     strategy = document_harmonization_strategy(schema_comparison, metadata_comparison)
 
     # Build complete report
@@ -450,11 +432,7 @@ def generate_harmonization_report(city_names: list[str]) -> dict[str, Any]:
     return report
 
 
-# ===================================================================
 # Output persistence
-# ===================================================================
-
-
 def _save_harmonization_report(report: dict) -> Path:
     """Save harmonization report as JSON."""
     output_dir = get_output_dir("harmonization")
@@ -506,7 +484,9 @@ def _save_harmonization_summary_md(report: dict) -> Path:
         lines.append(f"### {file_type.title()}")
         lines.append("")
         lines.append(f"- **Common columns:** {comp.get('common_columns', 0)}")
-        lines.append(f"- **Total unique columns:** {comp.get('total_unique_columns', 0)}")
+        lines.append(
+            f"- **Total unique columns:** {comp.get('total_unique_columns', 0)}"
+        )
 
         specific = comp.get("city_specific_columns", {})
         if specific:
@@ -518,7 +498,9 @@ def _save_harmonization_summary_md(report: dict) -> Path:
         if type_issues:
             lines.append(f"- **Type inconsistencies:** {len(type_issues)} columns")
             for issue in type_issues[:5]:
-                lines.append(f"  - `{issue['column']}`: {issue.get('type_mismatch', {})}")
+                lines.append(
+                    f"  - `{issue['column']}`: {issue.get('type_mismatch', {})}"
+                )
 
         # Size comparison
         sizes = comp.get("size_comparison", {})

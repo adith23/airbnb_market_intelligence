@@ -7,6 +7,7 @@ from src.platform.agentic_ai.sql_agent import (
     generate_sql,
     synthesize_results,
     validate_and_secure_sql,
+    is_mock_llm,
 )
 
 
@@ -14,6 +15,10 @@ def render_ai_chat():
     """Renders the AI Assistant chat interface."""
     st.subheader("💬 AI Database Assistant")
     st.caption("Ask questions in plain English to query the Data Warehouse.")
+
+    if is_mock_llm():
+        st.warning("⚠️ **Mock Mode Active:** Set `GEMINI_API_KEY` in a `.env` file (or environment variables) to connect to the live Gemini AI Agent.")
+
 
     # Custom CSS to make the chat container look distinct
     st.markdown(

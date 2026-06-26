@@ -25,4 +25,4 @@ COPY . .
 EXPOSE 8080
 
 # Run standard Streamlit or Dash app.
-CMD ["streamlit", "run", "dashboard/app.py", "--server.port=8080", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "dashboard/Home.py", "--server.port=8080", "--server.address=0.0.0.0"]

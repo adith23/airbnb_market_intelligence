@@ -1,4 +1,4 @@
-"""Pipeline orchestration for Section 3.5 automation.
+"""Pipeline orchestration for automation.
 
 This module coordinates stages 1-4 while recording metadata and lineage.
 It intentionally delegates domain work to the existing stage modules:

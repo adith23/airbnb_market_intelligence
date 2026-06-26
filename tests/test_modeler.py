@@ -1,4 +1,4 @@
-"""Tests for Section 3.4 DuckDB star-schema modeling."""
+"""Tests DuckDB star-schema modeling."""
 
 from __future__ import annotations
 
