@@ -890,7 +890,3 @@ demonstration.
 Dataset sourced from [Inside Airbnb](https://insideairbnb.com/), an independent,
 non-commercial project that provides publicly available Airbnb listing data for
 community research and advocacy.
-
-This project was developed as a technical assessment submission for
-[Expernetic (Pvt) Ltd](https://expernetic.com/) — Talent Assessment Program,
-Data Engineer Intern.
